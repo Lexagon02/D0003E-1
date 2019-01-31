@@ -26,6 +26,7 @@ Discarded input sections
  .text          0x00000000        0x0 main.o
  .data          0x00000000        0x0 main.o
  .bss           0x00000000        0x0 main.o
+ .text.clear    0x00000000       0x42 main.o
  .text.readJoystick
                 0x00000000       0x14 main.o
  .text.joystickSimple
@@ -34,7 +35,6 @@ Discarded input sections
                 0x00000000       0x1c main.o
  .text.primesSimple
                 0x00000000       0x3c main.o
- .text.clear    0x00000000       0x42 main.o
  .text          0x00000000        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_divmodsi4.o)
  .data          0x00000000        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_divmodsi4.o)
  .bss           0x00000000        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_divmodsi4.o)
@@ -333,37 +333,37 @@ END GROUP
                 0x00000094                __vector_20
                 0x00000098                . = ALIGN (0x2)
  *(.text.*)
- .text.initJoystick
-                0x00000098       0x22 main.o
-                0x00000098                initJoystick
- .text.joystickConcurrent
-                0x000000ba       0x48 main.o
-                0x000000ba                joystickConcurrent
- .text.initClock
-                0x00000102        0xc main.o
-                0x00000102                initClock
- .text.clockCycle
-                0x0000010e       0x22 main.o
-                0x0000010e                clockCycle
- .text.blinkSimpleConcurrent
-                0x00000130       0x18 main.o
-                0x00000130                blinkSimpleConcurrent
- .text.isPrime  0x00000148       0x98 main.o
-                0x00000148                isPrime
  .text.LCDWritePackage
-                0x000001e0      0x40e main.o
-                0x000001e0                LCDWritePackage
+                0x00000098      0x40e main.o
+                0x00000098                LCDWritePackage
  .text.writeChar
-                0x000005ee      0x132 main.o
-                0x000005ee                writeChar
+                0x000004a6      0x132 main.o
+                0x000004a6                writeChar
  .text.writeLong
-                0x00000720       0x82 main.o
-                0x00000720                writeLong
+                0x000005d8       0x82 main.o
+                0x000005d8                writeLong
+ .text.initLCD  0x0000065a       0x1a main.o
+                0x0000065a                initLCD
+ .text.initClock
+                0x00000674        0xc main.o
+                0x00000674                initClock
+ .text.clockCycle
+                0x00000680       0x22 main.o
+                0x00000680                clockCycle
+ .text.initJoystick
+                0x000006a2       0x22 main.o
+                0x000006a2                initJoystick
+ .text.joystickConcurrent
+                0x000006c4       0x48 main.o
+                0x000006c4                joystickConcurrent
+ .text.blinkSimpleConcurrent
+                0x0000070c       0x18 main.o
+                0x0000070c                blinkSimpleConcurrent
+ .text.isPrime  0x00000724       0x98 main.o
+                0x00000724                isPrime
  .text.primesConcurrent
-                0x000007a2       0x64 main.o
-                0x000007a2                primesConcurrent
- .text.initLCD  0x00000806       0x1a main.o
-                0x00000806                initLCD
+                0x000007bc       0x64 main.o
+                0x000007bc                primesConcurrent
  .text.main     0x00000820       0x32 main.o
                 0x00000820                main
  .text.libgcc.div
@@ -505,20 +505,20 @@ END GROUP
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000      0xed0
+.debug_info     0x00000000      0xec8
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0x7b6 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega169p/avr5/crtatmega169p.o
- .debug_info    0x000007b6      0x71a main.o
+ .debug_info    0x000007b6      0x712 main.o
 
-.debug_abbrev   0x00000000      0x926
+.debug_abbrev   0x00000000      0x8f6
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0x74b C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega169p/avr5/crtatmega169p.o
- .debug_abbrev  0x0000074b      0x1db main.o
+ .debug_abbrev  0x0000074b      0x1ab main.o
 
-.debug_line     0x00000000      0x673
+.debug_line     0x00000000      0x6a1
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x00000000      0x121 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega169p/avr5/crtatmega169p.o
- .debug_line    0x00000121      0x552 main.o
+ .debug_line    0x00000121      0x580 main.o
 
 .debug_frame    0x00000000      0x1e8
  *(.debug_frame)
