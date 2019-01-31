@@ -7,73 +7,123 @@
 
 #define CYCLE 18519
 #define BLINKBIT 3
+#define STARTPRIME 2
 
 #include <avr/io.h>
 #include <stdint-gcc.h>
 
 long currentPrime;
+int state;
 
 void initJoystick();
+int readJoystick();
+void joystickSimple();
+void joystickConcurrent();
 
-void LCD_Init();
+void initLCD();
 void LCDWritePackage();
 void writeLong(long i);
 void writeChar(char ch, int pos);
 void clear();
 
 
-void blink();
-void blink2();
-void primes();
-void primes2();
+void blinkSimple();
+void blinkSimpleConcurrent();
+void primesSimple();
+void primesConcurrent();
 int isPrime(long i);
 void initClock();
 int clockCycle();
 
-int main(void)
-{
+
+int main(void){
+
+	// Inits some stuff
 	initJoystick();
-	LCD_Init();
+	initLCD();
 	initClock();
 	
-	currentPrime = 2;
+	currentPrime = STARTPRIME;
 	
-	//primes();
-	
+
+	//primesSimple();
+	//blinkSimple();
+	//joystickSimple();
+
 	while(1){
 		
-		blink2();
-		primes2();
-		writeJoystickToScreen();
-		//writeChar('0' + readJoystick(),0);
+		blinkSimpleConcurrent();
+		primesConcurrent();
+		joystickConcurrent();
 	}
 }
 
+// Sets the joystick i/o pins to input_pullup and sets a start state that will 
+// activate the button the first cycle
 void initJoystick(){
 	
 	DDRB = DDRB & ~(1 << 7);
 	PORTB = PORTB | (1 << 7);
+	state = !readJoystick();
 }
-//Yabois kod
+
+// Reads the joystick
 int readJoystick(){
 	return (PINB & ( 1 << 7)) ? 1 : 0;
 		
 }
-void writeJoystickToScreen(){
-	LCDDR3 = readJoystick() ? 0x01 : 0x00;
+
+// Runs an infinity loop and writes the toggeling of the joystick to the screen
+void joystickSimple(){
+
+	state = !readJoystick();
+	while(1){
 	
+		// Checks if the state of the joystick has changed since the last cycle
+		if(readJoystick() != state){
+			
+			// Flips the register if the state went from false to true
+			state = !state;
+			if(state){
+				LCDDR3 = !LCDDR3;
+			}
+		
+		}
+	
+	}
+
 }
-void blink(){
-	
-	while(!clockCycle()){
+
+// Does the same as joystickSimple, but dosn't require an infinity-loop
+void joystickConcurrent(){
+
+	if(readJoystick() != state){
+		
+		state = !state;
+		if(state){
+			LCDDR3 = !LCDDR3;
+		}
 		
 	}
+
+}
+
+// Waits for the clock to hit the threashold and flips the register
+void blinkSimple(){
+
+	while(1){	
+		while(!clockCycle()){
+		
+		}
 	
-	LCDDR18 = !LCDDR18;
+		LCDDR18 = !LCDDR18;
+	}	
 	
 }
 
-void blink2(){
+
+// Checks if the clock has hit the threashold and flips it if so
+void blinkSimpleConcurrent(){
 	
 	if(clockCycle()){
 		LCDDR18 = !LCDDR18;
@@ -87,6 +137,8 @@ void initClock(){
 	
 }
 
+// If the clock (TCNT1) is higher than the CYCLE value, resets the clock and returns wheter 
+// the clock has changed
 int clockCycle(){
 	
 	if(TCNT1 > CYCLE){
@@ -98,17 +150,11 @@ int clockCycle(){
 }
 
 // Increments a variable, checks wheter it is a prime number and writes it to the screen if so
+void primesSimple(){
 
-void primes(){
-
-	long i = 0;
-
-	while(1){
+	long i = STARTPRIME;
+	do{
 		
-		while(!clockCycle()){
-			
-		}
-	
 		if(isPrime(i)){
 			//clear();
 			writeLong(i);
@@ -116,13 +162,12 @@ void primes(){
 		
 		}
 
-		i++;
-	
-	}
+	} while(++i);
 
 }
 
-void primes2(){
+// Same as primesSimple, but only generates one prime at the time
+void primesConcurrent(){
 	
 	while(1){
 		if(isPrime(currentPrime)){
@@ -135,7 +180,6 @@ void primes2(){
 }
 
 // Checks wheter a number is a prime number by brute force
-
 int isPrime(long i){
 
 	for(int j = 2; j < i; j++ ){
@@ -331,7 +375,7 @@ void clear(){
 
 // Inits the LCD by using some magic
 
-void LCD_Init(){
+void initLCD(){
 	
 	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDMUX0) | (1<<LCDPM2) | (1<<LCDPM1) | (1<<LCDPM0);
 	LCDFRR = (0<<LCDPS2) | (1<<LCDCD2) | (1<<LCDCD1) | (1<<LCDCD0);
