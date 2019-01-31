@@ -5,11 +5,15 @@
  * Author : Josef Utbult, Samuel Gratäng
  */ 
 
-#define F_CPU 10000000
+#define CYCLE 18519
+#define BLINKBIT 3
 
 #include <avr/io.h>
 #include <stdint-gcc.h>
-#include <util/delay.h>
+
+long currentPrime;
+
+void initJoystick();
 
 void LCD_Init();
 void LCDWritePackage();
@@ -17,20 +21,80 @@ void writeLong(long i);
 void writeChar(char ch, int pos);
 void clear();
 
+
+void blink();
+void blink2();
 void primes();
+void primes2();
 int isPrime(long i);
+void initClock();
+int clockCycle();
 
 int main(void)
 {
-	
+	initJoystick();
 	LCD_Init();
-
-	primes();
-
-	while(1){
+	initClock();
 	
-	}	
+	currentPrime = 2;
+	
+	//primes();
+	
+	while(1){
+		
+		blink2();
+		primes2();
+		writeJoystickToScreen();
+		//writeChar('0' + readJoystick(),0);
+	}
+}
 
+void initJoystick(){
+	
+	DDRB = DDRB & ~(1 << 7);
+	PORTB = PORTB | (1 << 7);
+}
+//Yabois kod
+int readJoystick(){
+	return (PINB & ( 1 << 7)) ? 1 : 0;
+		
+}
+void writeJoystickToScreen(){
+	LCDDR3 = readJoystick() ? 0x01 : 0x00;
+	
+}
+void blink(){
+	
+	while(!clockCycle()){
+		
+	}
+	
+	LCDDR18 = !LCDDR18;
+	
+}
+
+void blink2(){
+	
+	if(clockCycle()){
+		LCDDR18 = !LCDDR18;
+	}
+	
+}
+
+void initClock(){
+	
+	TCCR1B = TCCR1B | (1<<CS12);
+	
+}
+
+int clockCycle(){
+	
+	if(TCNT1 > CYCLE){
+		TCNT1 = 0;
+		return 1;
+	}
+	return 0;
+	
 }
 
 // Increments a variable, checks wheter it is a prime number and writes it to the screen if so
@@ -40,12 +104,15 @@ void primes(){
 	long i = 0;
 
 	while(1){
+		
+		while(!clockCycle()){
+			
+		}
 	
 		if(isPrime(i)){
-			clear();
+			//clear();
 			writeLong(i);
-			_delay_ms(500);
-			
+						
 		
 		}
 
@@ -53,6 +120,18 @@ void primes(){
 	
 	}
 
+}
+
+void primes2(){
+	
+	while(1){
+		if(isPrime(currentPrime)){
+			writeLong(currentPrime++);
+			return;
+		}
+		currentPrime++;
+	}
+	
 }
 
 // Checks wheter a number is a prime number by brute force
@@ -183,30 +262,30 @@ void LCDWritePackage(int offcet, uint16_t pos0, uint16_t pos1, uint16_t pos2, ui
 		// Shifts the nibbles up to the second part of the byte if the position is the
 		// second one in the digit-pair
 		
-		LCDDR0 = LCDDR0 | ((uint32_t)pos0 << (offcet == 1 ? 4 : 0));
-		LCDDR5 = LCDDR5 | ((uint32_t)pos1 << (offcet == 1 ? 4 : 0));
-		LCDDR10 = LCDDR10 | ((uint32_t)pos2 << (offcet == 1 ? 4 : 0));
-		LCDDR15 = LCDDR15 | ((uint32_t)pos3 << (offcet == 1 ? 4 : 0));
+		LCDDR0  = (LCDDR0  & (offcet == 1 ? 0x0F : 0xF0)) | ((uint32_t)pos0 << (offcet == 1 ? 4 : 0));
+		LCDDR5  = (LCDDR5  & (offcet == 1 ? 0x0F : 0xF0)) | ((uint32_t)pos1 << (offcet == 1 ? 4 : 0));
+		LCDDR10 = (LCDDR10 & (offcet == 1 ? 0x0F : 0xF0)) | ((uint32_t)pos2 << (offcet == 1 ? 4 : 0));
+		LCDDR15 = (LCDDR15 & (offcet == 1 ? 0x0F : 0xF0)) | ((uint32_t)pos3 << (offcet == 1 ? 4 : 0));
 
 	}
 	
 	// Digit 2 and 3 on the display
 	else if(offcet < 4){
 		
-		LCDDR1 = LCDDR1 | ((uint32_t)pos0 << (offcet == 3 ? 4 : 0));
-		LCDDR6 = LCDDR6 | ((uint32_t)pos1 << (offcet == 3 ? 4 : 0));
-		LCDDR11 = LCDDR11 | ((uint32_t)pos2 << (offcet == 3 ? 4 : 0));
-		LCDDR16 = LCDDR16 | ((uint32_t)pos3 << (offcet == 3 ? 4 : 0));
+		LCDDR1  = (LCDDR1  & (offcet == 3 ? 0x0F : 0xF0)) | ((uint32_t)pos0 << (offcet == 3 ? 4 : 0));
+		LCDDR6  = (LCDDR6  & (offcet == 3 ? 0x0F : 0xF0)) | ((uint32_t)pos1 << (offcet == 3 ? 4 : 0));
+		LCDDR11 = (LCDDR11 & (offcet == 3 ? 0x0F : 0xF0)) | ((uint32_t)pos2 << (offcet == 3 ? 4 : 0));
+		LCDDR16 = (LCDDR16 & (offcet == 3 ? 0x0F : 0xF0)) | ((uint32_t)pos3 << (offcet == 3 ? 4 : 0));
 
 	}
 	
 	// Digit 4 and 5 on the display
 	else if(offcet < 6){
 		
-		LCDDR2 = LCDDR2 | ((uint32_t)pos0 << (offcet == 5 ? 4 : 0));
-		LCDDR7 = LCDDR7 | ((uint32_t)pos1 << (offcet == 5 ? 4 : 0));
-		LCDDR12 = LCDDR12 | ((uint32_t)pos2 << (offcet == 5 ? 4 : 0));
-		LCDDR17 = LCDDR17 | ((uint32_t)pos3 << (offcet == 5 ? 4 : 0));
+		LCDDR2  = (LCDDR2  & (offcet == 5 ? 0x0F : 0xF0)) | ((uint32_t)pos0 << (offcet == 5 ? 4 : 0));
+		LCDDR7  = (LCDDR7  & (offcet == 5 ? 0x0F : 0xF0)) | ((uint32_t)pos1 << (offcet == 5 ? 4 : 0));
+		LCDDR12 = (LCDDR12 & (offcet == 5 ? 0x0F : 0xF0)) | ((uint32_t)pos2 << (offcet == 5 ? 4 : 0));
+		LCDDR17 = (LCDDR17 & (offcet == 5 ? 0x0F : 0xF0)) | ((uint32_t)pos3 << (offcet == 5 ? 4 : 0));
 
 	}
 	
@@ -214,10 +293,10 @@ void LCDWritePackage(int offcet, uint16_t pos0, uint16_t pos1, uint16_t pos2, ui
 	
 	else if(offcet < 8){
 		
-		LCDDR3 = LCDDR3 | ((uint32_t)pos0 << (offcet == 7 ? 4 : 0));
-		LCDDR7 = LCDDR7 | ((uint32_t)pos1 << (offcet == 7 ? 4 : 0));
-		LCDDR13 = LCDDR13 | ((uint32_t)pos2 << (offcet == 7 ? 4 : 0));
-		LCDDR18 = LCDDR18 | ((uint32_t)pos3 << (offcet == 7 ? 4 : 0));
+		LCDDR3  = (LCDDR3  & (offcet == 7 ? 0x0F : 0xF0)) | ((uint32_t)pos0 << (offcet == 7 ? 4 : 0));
+		LCDDR7  = (LCDDR7  & (offcet == 7 ? 0x0F : 0xF0)) | ((uint32_t)pos1 << (offcet == 7 ? 4 : 0));
+		LCDDR13 = (LCDDR13 & (offcet == 7 ? 0x0F : 0xF0)) | ((uint32_t)pos2 << (offcet == 7 ? 4 : 0));
+		LCDDR18 = (LCDDR18 & (offcet == 7 ? 0x0F : 0xF0)) | ((uint32_t)pos3 << (offcet == 7 ? 4 : 0));
 
 	}
 
