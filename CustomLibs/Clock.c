@@ -1,10 +1,6 @@
-#ifndef CYCLE
-#define CYCLE 18519
-#endif
-
-void initClock();
-int clockCycle();
-
+#include "Clock.h"
+#include <avr/io.h>
+#include <stdint-gcc.h>
 
 void initClock(){
 	

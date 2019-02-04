@@ -1,9 +1,7 @@
-void initLCD();
-void LCDWritePackage();
-void writeLong(long i);
-void writeChar(char ch, int pos);
-void clear();
+#include <avr/io.h>
+#include <stdint-gcc.h>
 
+#include "LCD.h"
 
 // Hacks up a long and writes them as chars to the screen
 

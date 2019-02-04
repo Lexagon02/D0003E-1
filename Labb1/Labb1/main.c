@@ -10,8 +10,8 @@
 
 #include <avr/io.h>
 #include <stdint-gcc.h>
-#include "src/LCD.h"
-#include "src/Clock.h"
+#include "LCD.h"
+#include "Clock.h"
 
 long currentPrime;
 int state;
@@ -22,7 +22,7 @@ void joystickSimple();
 void joystickConcurrent();
 
 void blinkSimple();
-void blinkSimpleConcurrent();
+void blinkConcurrent();
 void primesSimple();
 void primesConcurrent();
 int isPrime(long i);
@@ -44,7 +44,7 @@ int main(void){
 
 	while(1){
 		
-		blinkSimpleConcurrent();
+		blinkConcurrent();
 		primesConcurrent();
 		joystickConcurrent();
 	}
@@ -115,7 +115,7 @@ void blinkSimple(){
 
 
 // Checks if the clock has hit the threashold and flips it if so
-void blinkSimpleConcurrent(){
+void blinkConcurrent(){
 	
 	if(clockCycle()){
 		LCDDR18 = !LCDDR18;
