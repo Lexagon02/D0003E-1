@@ -18,7 +18,7 @@ void computePrimes(int pos) {
     for(n = 1; ; n++) {
         if (is_prime(n)) {
             printAt(n, pos);
-			yield();
+			//yield();
         }
     }
 }
@@ -47,3 +47,4 @@ int is_prime(long i){
 	return 1;
 
 }
+

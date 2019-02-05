@@ -3,6 +3,8 @@
 #include <avr/interrupt.h>
 #include "tinythreads.h"
 
+
+#define DOWNBIT         DDB7
 #define NULL            0
 #define DISABLE()       cli()
 #define ENABLE()        sei()
@@ -35,8 +37,20 @@ static void initialize(void) {
         threads[i].next = &threads[i+1];
     threads[NTHREADS-1].next = NULL;
 
-
+	initInterrupt();
+	
     initialized = 1;
+}
+
+ISR(PCINT1_vect){
+        yield();
+}
+
+static void initInterrupt(){
+
+    DDRB |= (1 << DOWNBIT);
+    PORTB |= (1 << DOWNBIT);
+
 }
 
 static void enqueue(thread p, thread *queue) {
