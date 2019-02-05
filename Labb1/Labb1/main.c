@@ -1,9 +1,9 @@
-			/*
- * Labb1.c
- *
- * Created: 28-Jan-19 15:12:34
- * Author : Josef Utbult, Samuel Gratäng
- */ 
+/*
+* Labb1.c
+*
+* Created: 28-Jan-19 15:12:34
+* Author : Josef Utbult, Samuel Gratäng
+*/
 
 #define BLINKBIT 3
 #define STARTPRIME 2
@@ -17,155 +17,166 @@ long currentPrime;
 int state;
 
 void initJoystick();
+
 int readJoystick();
+
 void joystickSimple();
+
 void joystickConcurrent();
 
 void blinkSimple();
+
 void blinkConcurrent();
+
 void primesSimple();
+
 void primesConcurrent();
+
 int isPrime(long i);
 
 
-int main(void){
+int main(void) {
 
-	// Inits some stuff
-	initJoystick();
-	initLCD();
-	initClock();
-	
-	currentPrime = STARTPRIME;
-	
+    CLKPR = 0x80;
+    CLKPR = 0x00;
 
-	//primesSimple();
-	//blinkSimple();
-	//joystickSimple();
+    // Inits some stuff
+    initJoystick();
+    initLCD();
+    initClock();
 
-	while(1){
-		
-		blinkConcurrent();
-		primesConcurrent();
-		joystickConcurrent();
-	}
+    currentPrime = STARTPRIME;
+
+
+    //primesSimple();
+    //blinkSimple();
+    //joystickSimple();
+
+	//writeLong(123456789);
+    while (1) {
+
+        blinkConcurrent();
+        primesConcurrent();
+        joystickConcurrent();
+    }
 }
 
 // Sets the joystick i/o pins to input_pullup and sets a start state that will 
 // activate the button the first cycle
-void initJoystick(){
-	
-	DDRB = DDRB & ~(1 << 7);
-	PORTB = PORTB | (1 << 7);
-	state = !readJoystick();
+void initJoystick() {
+
+    DDRB = DDRB & ~(1 << 7);
+    PORTB = PORTB | (1 << 7);
+    state = !readJoystick();
 }
 
 // Reads the joystick
-int readJoystick(){
-	return (PINB & ( 1 << 7)) ? 1 : 0;
-		
+int readJoystick() {
+    return (PINB & (1 << 7)) ? 1 : 0;
+
 }
 
 // Runs an infinity loop and writes the toggeling of the joystick to the screen
-void joystickSimple(){
+void joystickSimple() {
 
-	state = !readJoystick();
-	while(1){
-	
-		// Checks if the state of the joystick has changed since the last cycle
-		if(readJoystick() != state){
-			
-			// Flips the register if the state went from false to true
-			state = !state;
-			if(state){
-				LCDDR3 = !LCDDR3;
-			}
-		
-		}
-	
-	}
+    state = !readJoystick();
+    while (1) {
+
+        // Checks if the state of the joystick has changed since the last cycle
+        if (readJoystick() != state) {
+
+            // Flips the register if the state went from false to true
+            state = !state;
+            if (state) {
+                LCDDR3 = !LCDDR3;
+            }
+
+        }
+
+    }
 
 }
 
 // Does the same as joystickSimple, but dosn't require an infinity-loop
-void joystickConcurrent(){
+void joystickConcurrent() {
 
-	if(readJoystick() != state){
-		
-		state = !state;
-		if(state){
-			LCDDR3 = !LCDDR3;
-		}
-		
-	}
+    if (readJoystick() != state) {
+
+        state = !state;
+        if (state) {
+            LCDDR3 = !LCDDR3;
+        }
+
+    }
 
 }
 
 // Waits for the clock to hit the threashold and flips the register
-void blinkSimple(){
+void blinkSimple() {
 
-	while(1){	
-		while(!clockCycle()){
-		
-		}
-	
-		LCDDR18 = !LCDDR18;
-	}	
-	
+    while (1) {
+        while (!clockCycle()) {
+
+        }
+
+        LCDDR18 = !LCDDR18;
+    }
+
 }
 
 
 // Checks if the clock has hit the threashold and flips it if so
-void blinkConcurrent(){
-	
-	if(clockCycle()){
-		LCDDR18 = !LCDDR18;
-	}
-	
+void blinkConcurrent() {
+
+    if (clockCycle()) {
+        LCDDR18 = !LCDDR18;
+    }
+
 }
 
 // Increments a variable, checks wheter it is a prime number and writes it to the screen if so
-void primesSimple(){
+void primesSimple() {
 
-	long i = STARTPRIME;
-	do{
-		
-		if(isPrime(i)){
-			//clear();
-			writeLong(i);
-						
-		
-		}
+    long i = STARTPRIME;
+    do {
 
-	} while(++i);
+        if (isPrime(i)) {
+            //clear();
+            writeLong(i);
+
+
+        }
+
+    } while (++i);
 
 }
 
 // Same as primesSimple, but only generates one prime at the time
-void primesConcurrent(){
-	
-	while(1){
-		if(isPrime(currentPrime)){
-			writeLong(currentPrime++);
-			return;
-		}
-		currentPrime++;
-	}
-	
+void primesConcurrent() {
+
+    while (1) {
+        if (isPrime(currentPrime)) {
+            writeLong(currentPrime++);
+            return;
+        }
+        currentPrime++;
+    }
+
 }
 
 // Checks wheter a number is a prime number by brute force
-int isPrime(long i){
+int isPrime(long i) {
 
-	for(int j = 2; j < i; j++ ){
-	
-		if(!(i % j)){
-		
-			return 0;
-		
-		}
-	
-	}
+    for (int j = 2; j < i; j++) {
 
-	return 1;
+        if (!(i % j)) {
+
+            return 0;
+
+        }
+
+    }
+
+    return 1;
 
 }
