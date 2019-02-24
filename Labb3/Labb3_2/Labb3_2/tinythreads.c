@@ -1,20 +1,11 @@
 #include <setjmp.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
 #include "tinythreads.h"
 
 #ifndef PORTB
 #include "src/iom169.h"
 #endif
-
-#ifndef F_CPU
-#define F_CPU 8000000
-#endif
-
-// (Freq * ms) / (prescaler * seconds to ms)
-// (8000000 * 50 / (1024 * 1000)
-#define DELAY 391
 
 #define DOWNBIT         7
 #define NULL            0
@@ -41,53 +32,15 @@ thread freeQ   = threads;
 thread readyQ  = NULL;
 thread current = &initp;
 
-
-static void initButtonInterrupt(){
-
-    // Button stuff
-	// Makes the downbit input pullup
-	DDRB &= ~(1 << DOWNBIT);
-	PORTB |= (1 << DOWNBIT);
-
-    // Enables external interrupt and sets the interrupt to PCINT15..8
-    EIMSK |= (1 << PCIE1);
-
-    // Enables interrupt on PCINT15
-    PCMSK1 |= (1 << PCINT15);
-
-    // Sets interrupt control to generate an interruption on a falling edge
-    EICRA |= (1 << ISC01);
-
-}
-
-static void initClockInterrupt(){
-	
-	// Sets OC1A/PCINT13 to compare and interrupt
-	PORTB |= (1 << PB7) | (1 << PB5);
-	
-	// Clock stuff
-	// Set OC1A/OC1B on Compare Match (Set output to high level)
-	TCCR1A |= (1 << COM1A1) | (1 << COM1A0);
-
-	// Sets the timer to CTC mode
-	TCCR1B |= (1 << WGM12);
-
-	// Sets the clock select to internal clock with a prescale of 1024
-	TCCR1B |= (1 << CS12) | (1 << CS10);
-
-	//
-	TIMSK1 |= (1 << OCIE1A);
-
-	// Sets the compare register
-	OCR1A = DELAY;
-
-	// Clears the timer
-	TCNT1 = 0;
-	
-}
-
-
 int initialized = 0;
+
+ISR(TIMER1_COMPA_vect){
+	
+	unlock(flashMutex);
+	
+	while(1);
+		
+}
 
 static void initialize(void) {
     int i;
@@ -95,36 +48,15 @@ static void initialize(void) {
         threads[i].next = &threads[i+1];
     threads[NTHREADS-1].next = NULL;
 
-	CLKPR = 0x80;
-	CLKPR = 0x0;
+	mutex temp = {1, 0};
+	flashMutex = &temp;
 
-	//initButtonInterrupt();
-	initClockInterrupt();
-	
     initialized = 1;
 }
 
-ISR(PCINT1_vect){
-
-    if(!(PINB & (1 << DOWNBIT))){
-        yield();
-    }
-}
-
-ISR(TIMER1_COMPA_vect){
-    yield();
-}
-
 static void enqueue(thread p, thread *queue) {
-    p->next = NULL;
-    if (*queue == NULL) {
-        *queue = p;
-    } else {
-        thread q = *queue;
-        while (q->next)
-            q = q->next;
-        q->next = p;
-    }
+    p->next = *queue;
+	*queue = p;
 }
 
 static thread dequeue(thread *queue) {
@@ -171,8 +103,9 @@ void spawn(void (* function)(int), int arg) {
 
 void yield(void) {
 
+	thread temp = dequeue(&readyQ);
 	enqueue(current, &readyQ);
-	dispatch(dequeue(&readyQ));
+	dispatch(temp);
 
 }
 
@@ -191,6 +124,7 @@ void lock(mutex *m) {
 }
 
 void unlock(mutex *m) {
+
 
 	DISABLE();
 	if(m->waitQ){
