@@ -22,11 +22,11 @@ struct mutex_block {
 };
 typedef struct mutex_block mutex;
 
- 
-mutex *flashMutex;
-
 void lock(mutex *m);
 void unlock(mutex *m);
+
+mutex* getFlashMutex();
+mutex* getJoystickMutex();
 
 #endif
 

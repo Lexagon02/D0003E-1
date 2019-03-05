@@ -171,8 +171,10 @@ void spawn(void (* function)(int), int arg) {
 
 void yield(void) {
 
+	DISABLE();
 	enqueue(current, &readyQ);
 	dispatch(dequeue(&readyQ));
+	ENABLE();
 
 }
 

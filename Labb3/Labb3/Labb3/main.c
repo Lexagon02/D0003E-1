@@ -72,9 +72,9 @@ void checkClock(int arg){
 	int state = 0;
 	
 	while(1){
-		if(interruptCounter >= CYCLE){
-			interruptCounter = 0;
-			
+		if(getCounter() >= CYCLE){
+			setCounter(0);
+				
 			LCDWritePackage(2, state ? 0b0100 : 0x00, 0x00, 0x00, 0x00);
 			state = !state;
 		}

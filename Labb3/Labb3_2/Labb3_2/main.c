@@ -11,7 +11,7 @@
 
 int state;
 
-void initJoystick();
+static void initButtonInterrupt();
 int readJoystick();
 int isPrime(long i);
 void countPrime(int arg);
@@ -28,10 +28,12 @@ int main(void){
 	state = 0;
 	
 	initLCD();
-	initJoystick();
+	initButtonInterrupt();
 	initClockInterrupt();
 	
 	spawn(flipClock, 0);
+	yield();
+	spawn(checkJoystick, 0);
 	yield();
 	
     countPrime(0);
@@ -39,22 +41,14 @@ int main(void){
 
 
 void checkJoystick(int arg){
-	initJoystick();
 	int counter = 0;
-	int state = !readJoystick();
 	
 	while(1){
-		if(state != readJoystick()){
-			
-			if(!state){
-				// lock(&ppMutex);
-				printAt(counter++, 4);
-				// unlock(&ppMutex);
-			}
-			
-			state = !state;
-			
-		}
+		
+		printAt(counter++, 4);
+		
+		lock(getJoystickMutex());
+		
 	}
 	
 }
@@ -69,6 +63,7 @@ void countPrime(int arg){
 			
 		}
 		currentPrime++;
+
 	}
 	
 	
@@ -103,23 +98,31 @@ static void initClockInterrupt(){
 void flipClock(int arg){
 	
 	while(1){
-		lock(flashMutex);
-		
-		writeChar('H', 0);
-		while(1);
+		lock(getFlashMutex());
 		
 		LCDWritePackage(2, state ? 0b0100 : 0x00, 0x00, 0x00, 0x00);
 		state = !state;
+		
 	}
 }
 
-// Sets the joystick i/o pins to input_pullup and sets a start state that will
-// activate the button the first cycle
-void initJoystick() {
 
-	DDRB = DDRB & ~(1 << 7);
-	PORTB = PORTB | (1 << 7);
-	//state = !readJoystick();
+static void initButtonInterrupt(){
+
+	// Button stuff
+	// Makes the downbit input pullup
+	DDRB &= ~(1 << 7);
+	PORTB |= (1 << 7);
+
+	// Enables external interrupt and sets the interrupt to PCINT15..8
+	EIMSK |= (1 << PCIE1);
+
+	// Enables interrupt on PCINT15
+	PCMSK1 |= (1 << PCINT15);
+
+	// Sets interrupt control to generate an interruption on a falling edge
+	EICRA |= (1 << ISC01);
+
 }
 
 // Reads the joystick

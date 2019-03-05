@@ -16,6 +16,9 @@
 #define SETSTACK(buf,a) *((unsigned int *)(buf)+8) = (unsigned int)(a) + STACKSIZE - 4; \
                         *((unsigned int *)(buf)+9) = (unsigned int)(a) + STACKSIZE - 4
 
+mutex flashMutex = {1, 0};
+mutex joystickMutex = {1, 0};
+
 struct thread_block {
     void (*function)(int);   // code to run
     int arg;                 // argument to the above
@@ -36,20 +39,23 @@ int initialized = 0;
 
 ISR(TIMER1_COMPA_vect){
 	
-	unlock(flashMutex);
-	
-	while(1);
+	unlock(getFlashMutex());
 		
 }
+
+ISR(PCINT1_vect){
+
+	if(!(PINB & (1 << DOWNBIT))){
+		unlock(getJoystickMutex());
+	}
+}
+
 
 static void initialize(void) {
     int i;
     for (i=0; i<NTHREADS-1; i++)
         threads[i].next = &threads[i+1];
     threads[NTHREADS-1].next = NULL;
-
-	mutex temp = {1, 0};
-	flashMutex = &temp;
 
     initialized = 1;
 }
@@ -125,7 +131,6 @@ void lock(mutex *m) {
 
 void unlock(mutex *m) {
 
-
 	DISABLE();
 	if(m->waitQ){
 		enqueue(current, &readyQ);
@@ -137,4 +142,12 @@ void unlock(mutex *m) {
 	ENABLE();
 	
 
+}
+
+mutex* getFlashMutex(){
+	return &flashMutex;
+}
+
+mutex* getJoystickMutex(){
+	return &joystickMutex;
 }

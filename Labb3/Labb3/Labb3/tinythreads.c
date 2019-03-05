@@ -41,6 +41,8 @@ thread freeQ   = threads;
 thread readyQ  = NULL;
 thread current = &initp;
 
+int interruptCounter;
+
 static void initClockInterrupt(){
 	
 	// Sets OC1A/PCINT13 to compare and interrupt
@@ -146,9 +148,10 @@ void spawn(void (* function)(int), int arg) {
 
 void yield(void) {
 
+	DISABLE();
 	enqueue(current, &readyQ);
 	dispatch(dequeue(&readyQ));
-
+	ENABLE();
 }
 
 void lock(mutex *m) {
@@ -178,4 +181,13 @@ void unlock(mutex *m) {
 	ENABLE();
 	
 
+}
+
+
+int getCounter(){
+	return interruptCounter;
+}
+
+void setCounter(int val){
+	interruptCounter = val;
 }
