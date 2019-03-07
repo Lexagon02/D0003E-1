@@ -8,6 +8,8 @@ Joystick.c
 
 LCD.c
 
+Lock.c
+
 main.c
 
 pwmGenerator.c

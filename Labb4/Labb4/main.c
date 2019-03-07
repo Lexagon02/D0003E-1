@@ -5,18 +5,16 @@
 
 int main(void)
 {
-	GUI gui = GUI_INIT(&gui);
-	//PwmGenerator *pwmGenerators[2] = {PWMGENERATOR_INIT(), PWMGENERATOR_INIT()};
+	PwmGenerator pwmGenerator1 = PWMGENERATOR_INIT;
+	initPwmGenerator(&pwmGenerator1, 4, 99);
 	
-	/*for(int i = 0; i < 2; i++ ){
-		initPwmGenerator(pwmGenerators[i]);
-	}
-	*/
+	PwmGenerator pwmGenerator2 = PWMGENERATOR_INIT;
+	initPwmGenerator(&pwmGenerator2, 6, 80);
 	
-    while (1){
-    
-		
+	GUI gui = GUI_INIT;
+	setPwmGenerators(&gui, &pwmGenerator1, &pwmGenerator2);
+	initGUI(&gui);
 	
-	}
+    return TINYTIMBER(&gui, &run, NULL);
 }
 
