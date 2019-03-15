@@ -2,7 +2,7 @@
 #include <avr/io.h>
 
 #define FOSC 8000000 //1843200	// Clock speed
-#define BAUD 9600
+#define BAUD 38400
 #define MYUBER FOSC/16/BAUD-1
 
 unsigned int uber = MYUBER;

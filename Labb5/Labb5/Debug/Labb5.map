@@ -61,16 +61,20 @@ Discarded input sections
  .data          0x00000000        0x0 MainClass.o
  .bss           0x00000000        0x0 MainClass.o
  .text.run      0x00000000        0xc MainClass.o
- .debug_info    0x00000000       0xf4 MainClass.o
- .debug_abbrev  0x00000000       0xb9 MainClass.o
- .debug_loc     0x00000000       0x26 MainClass.o
+ .text.checkSensor
+                0x00000000        0xa MainClass.o
+ .text.checkCarSensor
+                0x00000000       0x1c MainClass.o
+ .debug_info    0x00000000      0x208 MainClass.o
+ .debug_abbrev  0x00000000      0x10f MainClass.o
+ .debug_loc     0x00000000       0xba MainClass.o
  .debug_aranges
-                0x00000000       0x20 MainClass.o
- .debug_ranges  0x00000000       0x10 MainClass.o
- .debug_line    0x00000000       0x6a MainClass.o
- .debug_str     0x00000000      0x14a MainClass.o
+                0x00000000       0x30 MainClass.o
+ .debug_ranges  0x00000000       0x20 MainClass.o
+ .debug_line    0x00000000       0xae MainClass.o
+ .debug_str     0x00000000      0x19e MainClass.o
  .comment       0x00000000       0x31 MainClass.o
- .debug_frame   0x00000000       0x24 MainClass.o
+ .debug_frame   0x00000000       0x54 MainClass.o
  .text          0x00000000        0x0 Serial.o
  .data          0x00000000        0x0 Serial.o
  .bss           0x00000000        0x0 Serial.o
@@ -679,9 +683,9 @@ END GROUP
  .debug_str     0x00000000      0x2b3 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega169p/avr5/crtatmega169p.o
  .debug_str     0x000002b3      0x1a4 main.o
                                 0x1df (size before relaxing)
- .debug_str     0x00000457       0x3f Serial.o
-                                0x1c0 (size before relaxing)
- .debug_str     0x00000496      0x404 TinyTimber.o
+ .debug_str     0x00000457       0x72 Serial.o
+                                0x1d3 (size before relaxing)
+ .debug_str     0x000004c9      0x3d1 TinyTimber.o
                                 0x55b (size before relaxing)
 
 .debug_loc      0x00000000     0x2049
