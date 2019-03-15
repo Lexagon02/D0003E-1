@@ -3,8 +3,8 @@
 #include "MainClass.h"
 #include "Serial.h"
 
-#include <util/delay.h>
 #define F_CPU 8000000
+#include <util/delay.h>
 
 int main(void){
 	
@@ -16,7 +16,7 @@ int main(void){
 	initSerial(&serial);
 	
     while (1) {
-		send(&serial, 0x40);
+		send(&serial, 'H');
 		_delay_ms(1000);
     }
 }
