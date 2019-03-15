@@ -4,6 +4,8 @@
 
 GUI.c
 
+Hold.c
+
 Joystick.c
 
 LCD.c
@@ -11,6 +13,8 @@ LCD.c
 Lock.c
 
 main.c
+
+PortEWriter.c
 
 pwmGenerator.c
 

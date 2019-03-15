@@ -9,13 +9,11 @@
 #define LCDLINE2BIT 5
 #define LCDLINE4BIT 6
 
-
 int initGUI(GUI* self){
+	
 	initLCD();
 	initJoystick();
-	
-	render(self);
-	
+
 	return 1;
 }
 
@@ -27,12 +25,12 @@ void writeAt(int pos, int value){
 	
 }
 
-
+// Renders the LCD
 void render(GUI* self){
 	
-	writeAt(0, self->pwmGenerators[0]->step);
-	writeAt(4, self->pwmGenerators[1]->step);
-	
+	writeAt(0,self->pwmGenerators[0]->active ? self->pwmGenerators[0]->step : 0);
+	writeAt(4,self->pwmGenerators[1]->active ? self->pwmGenerators[1]->step : 0);
+		
 	if(self->currentChannel){
 		LCDLINE2REG &= ~(1 << LCDLINE2BIT);
 		LCDLINE4REG |= (1 << LCDLINE4BIT);
@@ -44,71 +42,61 @@ void render(GUI* self){
 	
 }
 
-void run(GUI *self){
-	
-	INSTALL(self, parseJoystickData, IRQ_PCINT0);
-	INSTALL(self, parseJoystickData, IRQ_PCINT1);
-	
-	SYNC(self->pwmGenerators[0], &activate, NULL);
-	SYNC(self->pwmGenerators[1], &activate, NULL);
-	
-}
+// Parses the gui upon joystick interrupts. Reads the joystick state,
+// increments/decrements the pwm signal speed on up/down, changes the
+// current pwm chanel on left/right and activates/deactivates the pwm
+// on input push
 
-void disableInterface(GUI* self){
+void parseGUI(GUI *self){
 	
-	SYNC(&(self->lock), &lockState, NULL);
-	int state = 1;
-	int i = 0;
-	
-	do {
-		
-		state = self->lock.state;
-		writeChar('0' + self->lock.state, 3);
-		writeChar('0' + (++i % 10), 2);
-		
-	} while (state);
-	
-}
-
-void parseJoystickData(GUI *self){
+	if(self->lock.state) return;
 	
 	switch (readJoystick()) {
 		
 		// 0 = Center, 1 = Upp, 2 = Down, 3 = Left, 4 = Right, 5 = Center Down
 		case 1:
-		
-			if(self->pwmGenerators[self->currentChannel]->step < 100){
-				self->pwmGenerators[self->currentChannel]->step++;
-				
-			}
-		
+			if(self->debounce || !self->pwmGenerators[self->currentChannel]->active) return;
+			
+			SYNC(self->pwmGenerators[self->currentChannel], &incrementStep, NULL);
+			self->debounce = 1;
+			
 		break;
 		
 		case 2:
+			if(self->debounce || !self->pwmGenerators[self->currentChannel]->active) return;
 			
-			if(self->pwmGenerators[self->currentChannel]->step >= 0){
-				self->pwmGenerators[self->currentChannel]->step--;
-				
-			}
+			SYNC(self->pwmGenerators[self->currentChannel], &decrementStep, NULL);
+			self->debounce = 1;
 			
 		break;
 		
 		case 3:
-		
+			if(self->debounce) return;	
 			self->currentChannel = 0;
-		
+			self->debounce = 1;
 		break;
 		
 		case 4:
-		
+			if(self->debounce) return;
 			self->currentChannel = 1;
-		
+			self->debounce = 1;
 		break;
 		
 		case 5:
+			if(self->debounce || !self->pwmGenerators[self->currentChannel]->step) return;
+			
+			if(self->pwmGenerators[self->currentChannel]->active){
+				deactivate(self->pwmGenerators[self->currentChannel]);
+			}
+			else{
+				activate(self->pwmGenerators[self->currentChannel]);
+			}
+			self->debounce = 1;
 		break;
 		
 		case 0:
+			self->debounce = 0;
+			self->hold = 0;
 		break;
 		
 		default:
@@ -116,8 +104,8 @@ void parseJoystickData(GUI *self){
 		
 	}
 	
-	ASYNC(self, &render, NULL);
-	//SYNC(self, &disableInterface, NULL);
+	render(self);
+	SYNC(&(self->lock), &lockState, NULL);
 
 }
 

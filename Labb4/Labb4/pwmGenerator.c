@@ -23,30 +23,31 @@ int initPwmGenerator(PwmGenerator* self, int outputBit, int step){
 	
 }
 
+// Converts the current step that is outputed on the LCD to a 
+// half period of the pwm signal
 int stepToHalfPeriod(int step){
 	
-	return step * 10;
+	return (100 - step);
 	
 }
 
+// Flips the outputbit and starts an avalanche effect that reqursevly 
+// calls itself after the currently stored half period
 void cycle(PwmGenerator* self){
-
 	
 	if(self->active){
-		if(self->state){
-			WRITEREGISTER &= ~(1 << self->outputBit);
-
-		}
-		else{
-			WRITEREGISTER |= (1 << self->outputBit);
-		}
+		
+		int arg[2] = { self->outputBit, self->state };
+		SYNC(self->portEWriter, &write, arg);
 		
 		self->state = !self->state;
 		
-		SEND(MSEC(stepToHalfPeriod(self->step) - OFFCET), MSEC(stepToHalfPeriod(self->step) + OFFCET), self, &cycle, NULL);
+		SEND(MSEC(stepToHalfPeriod(self->step)), MSEC(stepToHalfPeriod(self->step) + OFFCET), self, &cycle, NULL);
 	}
 	else{
-		WRITEREGISTER &= ~(1 << self->outputBit);
+		
+		int arg[2] = { self->outputBit, 0 };
+		SYNC(self->portEWriter, &write, arg);
 	}
 	
 }
@@ -60,6 +61,20 @@ void activate(PwmGenerator* self){
 
 void deactivate(PwmGenerator* self){
 	self->active = 0;
+}
+
+void incrementStep(PwmGenerator* self){
+	if(self->step < 99){
+		self->step++;
+		
+	}
+}
+
+void decrementStep(PwmGenerator* self){
+	if(self->step > 0){
+		self->step--;
+		
+	}
 }
 
 void setStep(PwmGenerator* self, int* step){

@@ -142,6 +142,12 @@
     <Compile Include="GUI.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Hold.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Hold.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Joystick.c">
       <SubType>compile</SubType>
     </Compile>
@@ -161,6 +167,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="PortEWriter.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="PortEWriter.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="pwmGenerator.c">
