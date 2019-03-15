@@ -11,7 +11,8 @@ typedef struct {
 
 void initSerial(Serial* self);
 void send(Serial* self, unsigned char input);
-void read(Serial* self, int* output);
+void read(Serial* self, unsigned char* output);
+void serialAvailable(Serial* self, int* available);
 
 
 #endif /* SERIAL_H_ */

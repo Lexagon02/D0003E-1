@@ -28,6 +28,14 @@ void send(Serial* self, unsigned char input){
 	UDR0 = input;
 }
 
-void read(Serial* self, int* output){
+void read(Serial* self, unsigned char* output){
+	while(!(UCSR0A & (1<<UDRE)));
+	
+	*output = UDR0;
+}
+
+void serialAvailable(Serial* self, int* available){
+	
+	*available = !(UCSR0A & (1<<UDRE)) ? 1 : 0;
 	
 }
