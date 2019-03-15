@@ -1,5 +1,5 @@
 MainClass.d MainClass.o: .././MainClass.c .././MainClass.h \
- .././TinyTimber.h .././LCD.h .././Serial.h
+ .././TinyTimber.h .././LCD.h .././Serial.h .././CircularBuffer.h
 
 .././MainClass.h:
 
@@ -8,3 +8,5 @@ MainClass.d MainClass.o: .././MainClass.c .././MainClass.h \
 .././LCD.h:
 
 .././Serial.h:
+
+.././CircularBuffer.h:

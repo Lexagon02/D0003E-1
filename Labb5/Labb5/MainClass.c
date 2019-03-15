@@ -13,7 +13,7 @@ void run(MainClass* self){
 }
 int checkSensor(Serial *serial){
 	char availabel = 0;
-	serialAvailable(serial, availabel);
+	serialAvailable(serial, &availabel);
 	if(availabel){
 		return 1;
 	}
