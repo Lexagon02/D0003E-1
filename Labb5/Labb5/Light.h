@@ -3,6 +3,7 @@
 
 #include "TinyTimber.h"
 //Buffer?
+#define INIT_LIGHT {initObject()}
 
 typedef struct{
 	Object super;
@@ -14,6 +15,7 @@ typedef struct{
 void tick();
 void getCurrentTime();
 void setTime(int time);
-void getTIme();
+void getTime();
+int getState();
 
 

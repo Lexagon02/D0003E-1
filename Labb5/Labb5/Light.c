@@ -9,15 +9,28 @@
 #include "LCD.h"
 #include "TinyTimber.h"
 
-
+void initLight(Light* self){
+	self -> currentTime = 0;
+	self -> time = 5; 
+	self -> state = 0;
+}
 
 void run(Light* self){
-	tick();
+	tick(self);
 }
 
 
-void tick(){
-
+void tick(Light* self){
+	self->time = self->time -1;
+	
+	if((self->time)=<5){
+		self->state = 0;
+	}
+	else{
+		self->state = 1;
+		
+	}
+	SEND(MSEC(1000),MSEC(1010),self,tick,NULL);
 }
 
 int getTime(Light* self){
@@ -31,5 +44,9 @@ int getCurrentTime(Light* self){
 
 void setTime(Light* self,int time){
 	self -> time = time;
+}
+
+int getState(Light* self){
+	return self.state;
 }
 
