@@ -16,6 +16,7 @@ void onSensorRead(MainClass* self, unsigned char input);
 void run(MainClass* self){
 	Serial serial = INIT_SERIAL;
 	Light northLight;
+	Light southLight;
 	writeChar('H',0);
 	//SKAPA TVÅ TRÅDAR AV TYPEN LIGHT, EN NORTH, EN SOUTH
 	//KÖR DEM
@@ -29,7 +30,6 @@ void run(MainClass* self){
 
 			checkStarvation();
 
-			sendLight();
 			
 		}
 	}
@@ -37,10 +37,10 @@ void run(MainClass* self){
 }
 
 void onSensorRead(MainClass* self, unsigned char input){
-	checkCarSensor();
+	checkCarSensor(input);
 	checkQueue();
 	checkStarvation();
-	
+	sendLight();
 }
 
 int checkSensor(Serial *serial){
@@ -94,10 +94,10 @@ void checkStarvation(){
 
 }
 
-void sendLights(){
-
-		int
-
+void sendLight(Serial* self){
+	
+	send()
+	
 }
 
 void addCar(int* queue){

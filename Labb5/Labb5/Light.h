@@ -3,6 +3,7 @@
 
 #include "TinyTimber.h"
 //Buffer?
+#define INIT_LIGHT {initObject()}
 
 typedef struct{
 	Object super;

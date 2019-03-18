@@ -9,15 +9,21 @@
 #include "LCD.h"
 #include "TinyTimber.h"
 
-
+void initLight(Light* self){
+	self -> currentTime = 0;
+	self -> time = 5; 
+	self -> state = 0;
+}
 
 void run(Light* self){
-	tick();
+	tick(self);
 }
 
 
-void tick(){
-
+void tick(Light* self){
+	if(En secund har paserat){
+		self -> time = self -> time + 1
+	}
 }
 
 int getTime(Light* self){
