@@ -4,12 +4,12 @@
 #include "TinyTimber.h"
 //Buffer?
 
-typdef struct{
+typedef struct{
 	Object super;
 	int currentTime;
 	int time;
 	int state;
-}Light
+} Light;
 
 void tick();
 void getCurrentTime();

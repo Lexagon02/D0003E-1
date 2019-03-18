@@ -11,11 +11,11 @@
 //
 // if time goes upp to 20 sec, force change lights
 
-
+void onSensorRead(unsigned char);
 
 void run(MainClass* self){
 	Serial serial = INIT_SERIAL;
-
+	Light northLight;
 	writeChar('H',0);
 	//SKAPA TVÅ TRÅDAR AV TYPEN LIGHT, EN NORTH, EN SOUTH
 	//KÖR DEM
@@ -35,6 +35,11 @@ void run(MainClass* self){
 	}
 
 }
+
+void onSensorRead(unsigned char){
+	
+}
+
 int checkSensor(Serial *serial){
 	char availabel = 0;
 	serialAvailable(serial, &availabel);

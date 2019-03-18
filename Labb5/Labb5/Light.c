@@ -1,14 +1,15 @@
-<<<<<<< HEAD
+
 /*
  * Light.c
  *
  * Created: 18-Mar-19 16:57:43
- *  Author: josef
+ *  Author: Ya boi Asmongold
  */ 
-=======
 #include "Light.h"
 #include "LCD.h"
 #include "TinyTimber.h"
+
+
 
 void run(Light* self){
 	tick();
@@ -16,7 +17,6 @@ void run(Light* self){
 
 
 void tick(){
-
 
 }
 
@@ -33,4 +33,3 @@ void setTime(Light* self,int time){
 	self -> time = time;
 }
 
->>>>>>> 2f9841fc8eb7f427341c5246be3e9d6f5d958cc1
