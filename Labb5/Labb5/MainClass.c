@@ -12,9 +12,6 @@
 // if time goes upp to 20 sec, force change lights
 
 
-int northQueue = 0;
-int southQueue = 0;
-
 
 void run(MainClass* self){
 	Serial serial = INIT_SERIAL;
@@ -52,7 +49,7 @@ void checkCarSensor(Serial *serial){
 	
 	//Northbound car arrival sensor activated
 	if(output & (1 << 0)){
-		addCar(northCar);
+		addCar(self -> northQueue);
 	}
 	if(output & (1 << 1)){
 		setSouthLight(5);
@@ -60,7 +57,7 @@ void checkCarSensor(Serial *serial){
 		//NorraBroSensor
 	}
 	if(output & (1 << 2)){
-		addCar(southCar)
+		addCar(self -> northQueue)
 	}
 		
 	if(output & (1 << 3)){
@@ -97,8 +94,8 @@ void sendLights(){
 
 }
 
-void addCar(int queue){
-	queue = queue + 1;
+void addCar(int* queue){
+	*queue = *queue + 1;
 }
 
 void removeCar(int queue){
