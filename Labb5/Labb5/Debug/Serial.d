@@ -1,5 +1,4 @@
 Serial.d Serial.o: .././Serial.c .././Serial.h .././TinyTimber.h \
- .././CircularBuffer.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\sfr_defs.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\inttypes.h \
@@ -15,8 +14,6 @@ Serial.d Serial.o: .././Serial.c .././Serial.h .././TinyTimber.h \
 .././Serial.h:
 
 .././TinyTimber.h:
-
-.././CircularBuffer.h:
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h:
 

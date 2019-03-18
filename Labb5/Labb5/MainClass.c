@@ -20,19 +20,19 @@ void run(MainClass* self){
 	//SKAPA TVÅ TRÅDAR AV TYPEN LIGHT, EN NORTH, EN SOUTH
 	//KÖR DEM
 	
-while(1){
-	if(checkSensor){
+	while(1){
+		if(checkSensor){
 
-		checkCarSensor(&serial);
+			checkCarSensor(&serial);
 
-		checkQueue();
+			checkQueue();
 
-		checkStarvation();		
+			checkStarvation();
 
-		sendLight();
-		
+			sendLight();
+			
+		}
 	}
-}
 
 }
 int checkSensor(Serial *serial){

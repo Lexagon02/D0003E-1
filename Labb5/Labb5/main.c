@@ -1,6 +1,6 @@
 #include <avr/io.h>
 #include "TinyTimber.h"
-#include "MainClass.h"
+//#include "MainClass.h"
 #include "Serial.h"
 #include "LCD.h"
 
@@ -14,27 +14,24 @@ int main(void){
 	
 	initLCD();
 	
-	Serial serial = INIT_SERIAL;
+	int northQueue = 0;
+	int southQueue = 0;
+	
+	Serial serial;
 	initSerial(&serial);
 	
-    while (1) {
-		
-		send(&serial, 'H');
-		send(&serial, 'E');
-		send(&serial, 'L');
-		send(&serial, 'L');
-		send(&serial, 'O');
-		send(&serial, 'W');
-		send(&serial, 'O');
-		send(&serial, 'R');
-		send(&serial, 'L');
-		send(&serial, 'D');
-		
-		for(int i = 0; i < 10; i++ ){
-			writeToSerial(&serial);
+	int temp;
+	
+	while(1){
+		serialAvailable(&serial, &temp);
+		if(temp){
+			unsigned char temp2;
+			read(&serial, &temp2);
+			writeChar(temp2, 0);
 		}
-		
-		_delay_ms(1000);
-    }
+	}
+	
+	//MainClass mainClass = INIT_MAIN_CLASS(&northQueue, &southQueue);
+	//TINYTIMBER(&mainClass, &run, NULL);
 }
 
