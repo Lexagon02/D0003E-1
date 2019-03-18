@@ -21,9 +21,16 @@ void run(Light* self){
 
 
 void tick(Light* self){
-	if(En secund har paserat){
-		self -> time = self -> time + 1
+	self->time = self->time -1;
+	
+	if((self->time)=<5){
+		self->state = 0;
 	}
+	else{
+		self->state = 1;
+		
+	}
+	SEND(MSEC(1000),MSEC(1010),self,tick,NULL);
 }
 
 int getTime(Light* self){
@@ -37,5 +44,9 @@ int getCurrentTime(Light* self){
 
 void setTime(Light* self,int time){
 	self -> time = time;
+}
+
+int getState(Light* self){
+	return self.state;
 }
 

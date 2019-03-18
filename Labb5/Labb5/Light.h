@@ -15,6 +15,7 @@ typedef struct{
 void tick();
 void getCurrentTime();
 void setTime(int time);
-void getTIme();
+void getTime();
+int getState();
 
 

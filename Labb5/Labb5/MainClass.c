@@ -14,9 +14,7 @@
 void onSensorRead(MainClass* self, unsigned char input);
 
 void run(MainClass* self){
-	Serial serial = INIT_SERIAL;
-	Light northLight;
-	Light southLight;
+	//Josefs Skit
 	writeChar('H',0);
 	//SKAPA TVÅ TRÅDAR AV TYPEN LIGHT, EN NORTH, EN SOUTH
 	//KÖR DEM
@@ -38,9 +36,9 @@ void run(MainClass* self){
 
 void onSensorRead(MainClass* self, unsigned char input){
 	checkCarSensor(input);
-	checkQueue();
+	checkQueue(self);
 	checkStarvation();
-	sendLight();
+	sendLight(self);
 }
 
 int checkSensor(Serial *serial){
@@ -51,74 +49,81 @@ int checkSensor(Serial *serial){
 	}
 }
 
-void checkCarSensor(char output){
+void checkCarSensor(MainClass* self, char output){
 	
 	//Northbound car arrival sensor activated
 	if(output & (1 << 0)){
-		addCar(self -> northQueue);
+		SYNC(&(self->north),addNorthCar,NULL);
 	}
 	if(output & (1 << 1)){
 		setSouthLight(5);
-		removeCar(northQueue);
+		SYNC(&(self->north),removeNorthCar(),NULL);
 		//NorraBroSensor
 	}
 	if(output & (1 << 2)){
-		addCar(self -> northQueue)
+		SYNC(&(self->north),addSouthCar,NULL);
 	}
 		
 	if(output & (1 << 3)){
 		setNorthLight(5);
-		removeCar(southQueue);
+		SYNC(&(self->north),removeSouthCar,NULL);
 		//södrabroskit
 	}
 }
 
-void checkQueue(){
+void checkQueue(MainClass* self){
 
-	if(northQueue == 0){
+	if(*(self->northQueue) == 0){
 		setNorthLight(10);
 	}
 
-	if(southQueue == 0){
+	if(self->southQueue == 0){
 		setSouthLight(10);
 	}
 }
 
-void checkStarvation(){
-	if((southLight->getCurrentTime => 20) && (northQueue < 1)){
+void checkStarvation(MainClass* self){						//Fråga Josef of Jag får värdet eller bara pekaren
+	if((SYNC(self->south,&getCurrentTime,NULL) => 20) && ( *(self->northQueue) > 0 )){
 		setSouthLight(6);//Jag tror det borde funka	
 	}
-	if((northLight->getCurrentTime => 20) && (southQueue < 1)){
+	if((SYNC(self->north,&getCurrentTime,NULL) => 20) && ( *(self->southQueue) > 0)){
 		setNorthLight(6);
 	}
-
 }
 
 void sendLight(Serial* self){
-	
+	if()
 	send()
+}
+
+void addSouthCar(MainClass* self){
+	*(self->southQueue) = *(self->southQueue) + 1;
 	
 }
 
-void addCar(int* queue){
-	*queue = *queue + 1;
+void addNorthCar(MainClass* self){
+	*(self->northQueue) = *(self->northQueue) + 1;
 }
 
-void removeCar(int queue){
-	queue = queue - 1;
+void removeNorthCar(MainClass* self){
+	 *(self->northQueue) = *(self->northQueue) - 1;
+}
+void removeSouthCar(MainClass* self){
+	*(self->southQueue) = *(self->southQueue) - 1;
 }
 
-int northLightRed(){
-	if( 0 == northLight->getLight()){
-		return 1;				
+int northLightRed(MainClass* self){
+	if(SYNC(self->north,getState,NULL) == 0){
+		return 1;
+	
 	}
 	return 0;
 }
-void setNorthLight(int time){
-	northLight -> setTime(Time);
+void setNorthLight(MainClass* self, time){
+	SYNC(self->north,setTime,time);
 }
-void setSouthLight(int time){
-	southLight -> setTime(Time);
+void setSouthLight(MainClass* self, int time){
+	SYNC(self->south,setTime,time);
 		
 }
 
