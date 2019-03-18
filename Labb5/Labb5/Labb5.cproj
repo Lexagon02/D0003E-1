@@ -136,12 +136,6 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CircularBuffer.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="CircularBuffer.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="LCD.c">
       <SubType>compile</SubType>
     </Compile>
@@ -149,12 +143,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MainClass.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MainClass.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Serial.c">
