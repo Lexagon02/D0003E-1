@@ -145,6 +145,12 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="MainClass.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MainClass.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Serial.c">
       <SubType>compile</SubType>
     </Compile>

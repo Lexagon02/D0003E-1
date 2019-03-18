@@ -1,7 +1,6 @@
 #include "MainClass.h"
 #include "LCD.h"
 #include "Serial.h"
-
 //LightObject
 //Time =  will start at 0
 //CurrentTime = 0; Will increment with '1',
@@ -10,8 +9,6 @@
 //
 //
 // if time goes upp to 20 sec, force change lights
-
-void onSensorRead(MainClass* self, unsigned char input);
 
 void run(MainClass* self){
 	Serial serial = INIT_SERIAL;

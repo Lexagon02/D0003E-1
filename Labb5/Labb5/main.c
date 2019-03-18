@@ -1,6 +1,6 @@
 #include <avr/io.h>
 #include "TinyTimber.h"
-//#include "MainClass.h"
+#include "MainClass.h"
 #include "Serial.h"
 #include "LCD.h"
 
@@ -16,9 +16,10 @@ int main(void){
 	
 	int northQueue = 0;
 	int southQueue = 0;
-	
+	MainClass mainClass = INIT_MAIN_CLASS(&northQueue, &southQueue);
+
 	Serial serial;
-	initSerial(&serial);
+	initSerial(&serial, &mainClass, &onSensorRead);
 	
 	int temp;
 	

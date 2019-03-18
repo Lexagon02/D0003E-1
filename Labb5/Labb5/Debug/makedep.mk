@@ -6,6 +6,8 @@ LCD.c
 
 main.c
 
+MainClass.c
+
 Serial.c
 
 TinyTimber.c

@@ -12,6 +12,6 @@ typedef struct{
 } MainClass;
 
 void run(MainClass* self);
-
+void onSensorRead(MainClass* self, unsigned char input);
 
 #endif /* MAINCLASS_H_ */
