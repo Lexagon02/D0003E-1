@@ -11,7 +11,7 @@
 //
 // if time goes upp to 20 sec, force change lights
 
-void onSensorRead(unsigned char);
+void onSensorRead(MainClass* self, unsigned char input);
 
 void run(MainClass* self){
 	Serial serial = INIT_SERIAL;
@@ -36,7 +36,10 @@ void run(MainClass* self){
 
 }
 
-void onSensorRead(unsigned char){
+void onSensorRead(MainClass* self, unsigned char input){
+	checkCarSensor();
+	checkQueue();
+	checkStarvation();
 	
 }
 
@@ -48,9 +51,7 @@ int checkSensor(Serial *serial){
 	}
 }
 
-void checkCarSensor(Serial *serial){
-	char output;	
-	read(serial, &output);	
+void checkCarSensor(char output){
 	
 	//Northbound car arrival sensor activated
 	if(output & (1 << 0)){
