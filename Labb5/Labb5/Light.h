@@ -2,7 +2,6 @@
 #define LIGHT_H_
 
 #include "TinyTimber.h"
-//Buffer?
 #define INIT_LIGHT {initObject()}
 
 typedef struct{
@@ -12,10 +11,11 @@ typedef struct{
 	int state;
 } Light;
 
-void tick();
-void getCurrentTime();
-void setTime(int time);
-void getTime();
-int getState();
+void initLight(Light* self);
+int getCurrentTime(Light* self);
+void setTime(Light* self, int time);
+int getTime(Light* self);
+int getState(Light* self);
 
 
+#endif

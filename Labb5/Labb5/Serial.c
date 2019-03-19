@@ -27,7 +27,7 @@ void initSerial(Serial* self, Object* onReadObject, void (*onReadFunction)(unsig
 	UCSR0C = (3 << UCSZ00) & ~(1 << USBS0);
 	
 	INSTALL(self, &read, IRQ_USART0_RX);
-	writeChar('J', 0);
+	
 }
 
 void send(Serial* self, unsigned char input){

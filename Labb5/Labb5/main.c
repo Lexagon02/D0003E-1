@@ -12,27 +12,13 @@ int main(void){
 	CLKPR = 0x80;
 	CLKPR = 0x00;
 	
-	initLCD();
-	
+	initLCD();	
+	writeChar('H',0);
+
 	int northQueue = 0;
 	int southQueue = 0;
+	
 	MainClass mainClass = INIT_MAIN_CLASS(&northQueue, &southQueue);
-
-	Serial serial;
-	initSerial(&serial, &mainClass, &onSensorRead);
-	
-	int temp;
-	
-	while(1){
-		serialAvailable(&serial, &temp);
-		if(temp){
-			unsigned char temp2;
-			read(&serial, &temp2);
-			writeChar(temp2, 0);
-		}
-	}
-	
-	//MainClass mainClass = INIT_MAIN_CLASS(&northQueue, &southQueue);
-	//TINYTIMBER(&mainClass, &run, NULL);
+	TINYTIMBER(&mainClass, &runMain, NULL);
 }
 

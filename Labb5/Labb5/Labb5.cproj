@@ -142,6 +142,12 @@
     <Compile Include="LCD.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Light.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Light.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>

@@ -1,6 +1,7 @@
 #include "MainClass.h"
 #include "LCD.h"
 #include "Serial.h"
+#include "Light.h"
 //LightObject
 //Time =  will start at 0
 //CurrentTime = 0; Will increment with '1',
@@ -10,45 +11,52 @@
 //
 // if time goes upp to 20 sec, force change lights
 
-void run(MainClass* self){
 
-	writeChar('H',0);
+void addSouthCar(MainClass* self);
+void addNorthCar(MainClass* self);
 
+void removeNorthCar(MainClass* self);
+void removeSouthCar(MainClass* self);
+
+void runMain(MainClass* self){
+
+
+	initSerial(&(self->serial), self, &onSensorRead);
+	SYNC(&(self->north), &initLight, NULL);
+	SYNC(&(self->south), &initLight, NULL);
+	
 }
 
 void onSensorRead(MainClass* self, unsigned char input){
-	checkCarSensor(input);
-	checkQueue(self);
-	checkStarvation();
-	sendLight(self);
-}
-
-int checkSensor(Serial *serial){
-	char availabel = 0;
-	serialAvailable(serial, &availabel);
-	if(availabel){
-		return 1;
-	}
+	// TODO: Remove
+	writeChar('0' + (input % 10), 5);
+	
+	checkCarSensor(self, input);
+	//checkQueue(self);
+	//checkStarvation();
+	//sendLight(self);
+	
+	
 }
 
 void checkCarSensor(MainClass* self, char output){
 	
 	//Northbound car arrival sensor activated
 	if(output & (1 << 0)){
-		SYNC(&(self->north),addNorthCar,NULL);
+		addNorthCar(self);
 	}
 	if(output & (1 << 1)){
 		setSouthLight(5);
-		SYNC(&(self->north),removeNorthCar(),NULL);
+		removeNorthCar(self);
 		//NorraBroSensor
 	}
 	if(output & (1 << 2)){
-		SYNC(&(self->north),addSouthCar,NULL);
+		addSouthCar(self);
 	}
 		
 	if(output & (1 << 3)){
 		setNorthLight(5);
-		SYNC(&(self->north),removeSouthCar,NULL);
+		removeSouthCar(self);
 		//södrabroskit
 	}
 }
@@ -56,19 +64,19 @@ void checkCarSensor(MainClass* self, char output){
 void checkQueue(MainClass* self){
 
 	if(*(self->northQueue) == 0){
-		setNorthLight(10);
+		setSouthLight(10);
 	}
 
 	if(self->southQueue == 0){
-		setSouthLight(10);
+		setNorthLight(10);
 	}
 }
 
 void checkStarvation(MainClass* self){						//Fråga Josef of Jag får värdet eller bara pekaren
-	if((SYNC(self->south,&getCurrentTime,NULL) => 20) && ( *(self->northQueue) > 0 )){
+	if((SYNC(&(self->south), &getCurrentTime, NULL) >= 20) && ( *(self->northQueue) > 0 )){
 		setSouthLight(6);//Jag tror det borde funka	
 	}
-	if((SYNC(self->north,&getCurrentTime,NULL) => 20) && ( *(self->southQueue) > 0)){
+	if((SYNC(&(self->north), &getCurrentTime, NULL) >= 20) && ( *(self->southQueue) > 0)){
 		setNorthLight(6);
 	}
 }
@@ -76,12 +84,12 @@ void checkStarvation(MainClass* self){						//Fråga Josef of Jag får värdet e
 void sendLight(MainClass* self){
 	int input = 0;
 	
-	if(SYNC(self->north,getState,NULL) == 0){
+	if(SYNC(&(self->north), &getState, NULL) == 0){
 		input = input | (1 << 1);	
 	}else{
 		input = input | 1;
 	}
-	if(SYNC(self->south,getState,NULL) == 0){
+	if(SYNC(&(self->north), &getState, NULL) == 0){
 		input = input | (1 << 3);
 	}
 	else{
@@ -108,17 +116,17 @@ void removeSouthCar(MainClass* self){
 }
 
 int northLightRed(MainClass* self){
-	if(SYNC(self->north,getState,NULL) == 0){
+	if(SYNC(&(self->north), &getState, NULL) == 0){
 		return 1;
 	
 	}
 	return 0;
 }
-void setNorthLight(MainClass* self, time){
-	SYNC(self->north,setTime,time);
+void setNorthLight(MainClass* self, int time){
+	SYNC(&(self->north), &setTime, time);
 }
 void setSouthLight(MainClass* self, int time){
-	SYNC(self->south,setTime,time);
+	SYNC(&(self->south), &setTime,time);
 		
 }
 
