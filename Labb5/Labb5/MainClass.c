@@ -11,23 +11,8 @@
 // if time goes upp to 20 sec, force change lights
 
 void run(MainClass* self){
-	//Josefs Skit
+
 	writeChar('H',0);
-	//SKAPA TVÅ TRÅDAR AV TYPEN LIGHT, EN NORTH, EN SOUTH
-	//KÖR DEM
-	
-	while(1){
-		if(checkSensor){
-
-			checkCarSensor(&serial);
-
-			checkQueue();
-
-			checkStarvation();
-
-			
-		}
-	}
 
 }
 
@@ -88,10 +73,23 @@ void checkStarvation(MainClass* self){						//Fråga Josef of Jag får värdet e
 	}
 }
 
-void sendLight(Serial* self){
-	if()
-	send()
+void sendLight(MainClass* self){
+	int input = 0;
+	
+	if(SYNC(self->north,getState,NULL) == 0){
+		input = input | (1 << 1);	
+	}else{
+		input = input | 1;
+	}
+	if(SYNC(self->south,getState,NULL) == 0){
+		input = input | (1 << 3);
+	}
+	else{
+		input = input | (1 << 2);
+	}
+	ASYNC(&(self->serial), &send, 'H');
 }
+
 
 void addSouthCar(MainClass* self){
 	*(self->southQueue) = *(self->southQueue) + 1;

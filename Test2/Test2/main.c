@@ -13,8 +13,9 @@ typedef struct {
 } MainObj;
 
 void run(MainObj* self);
-void write(unsigned char arg);
+void write(MainObj* self, unsigned char arg);
 
+int ehh;
 int main(void){
 
 	MainObj mainObj = INIT_MAIN_OBJ;
@@ -24,18 +25,30 @@ int main(void){
 }
 
 void run(MainObj* self){
-
+	
+	ehh = 0;
+	
 	initLCD();
 	initSerial(&(self->serial), self, &write);
 
-	while(1){
-		writeChar('0' + ((UCSR0A & (1<<UDRE0)) ? 1 : 0), 5);
-	}
-
 }
 
-void write(unsigned char arg){
+
+void write(MainObj* self, unsigned char arg){
 	
-	writeChar(arg, 0);
 	
+	writeChar(arg, ehh++);
+	
+	//writeChar('H', 0);
+	
+	/*
+	int temp = (int)arg;
+	
+	for(int i = 5; i >= 1; i-- ){
+		
+		writeChar('0' + (temp % 10), i);
+		temp = temp / 10;
+		
+	}
+	*/
 }

@@ -7,10 +7,9 @@
 
 unsigned int uber = MYUBER;
 
-void pullSerialData(Serial* self);
-void pushSerialData(Serial* self);
+void read(Serial* self);
 
-void initSerial(Serial* self, Object* onReadObject, void onReadFunction ( void (*f)(unsigned char))){
+void initSerial(Serial* self, Object* onReadObject, void (*onReadFunction)(unsigned char)){
 	
 	self->onReadObject = onReadObject;
 	self->onReadFunction = onReadFunction;
@@ -19,19 +18,19 @@ void initSerial(Serial* self, Object* onReadObject, void onReadFunction ( void (
 	UBRR0H = (unsigned char)(uber >> 8);
 	UBRR0L = (unsigned char)(uber);
 	
-	// Enable receive and transmit
-	UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+	
+	
+	// Enable receive and transmit, and enable and transmit interrupts
+	UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0) | (1 << TXCIE0);
 	
 	// Set frame format: 8data, 1stop bit
 	UCSR0C = (3 << UCSZ00) & ~(1 << USBS0);
 	
-	INSTALL(self, &read, USART0_RX_vect_num);
-
+	INSTALL(self, &read, IRQ_USART0_RX);
+	writeChar('J', 0);
 }
 
-
 void send(Serial* self, unsigned char input){
-
 	while(!(UCSR0A & (1 << UDRE0)));
 	UDR0 = input;
 	
@@ -39,17 +38,18 @@ void send(Serial* self, unsigned char input){
 
 void read(Serial* self){
 	
-	while(!(UCSR0A & (1<<UDRE0)));
-	self->buffer[self->memoryPosition] = UDR0;
+	while(!(UCSR0A & (1<<RXC0)));
 	
-	SYNC(self->onReadObject, self->onReadFunction, &(self->buffer[self->memoryPosition]));
-	self->memoryP
-	osition = ++(self->memoryPosition) % BUFFERSIZE;
+	unsigned char temp = UDR0;
 	
+	if(temp == 10) return;
+	
+	ASYNC(self->onReadObject, self->onReadFunction, temp);
+
 }
 
 void serialAvailable(Serial* self, int* available){
 	
-	*available = (UCSR0A & (1<<UDRE0));
+	*available = (UCSR0A & (1<<RXC0));
 	
 }

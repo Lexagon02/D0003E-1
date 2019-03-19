@@ -3,21 +3,18 @@
 
 #include "TinyTimber.h"
 #define BUFFERSIZE 100
-#define INIT_SERIAL {initObject(), NULL, NULL, {}, 0}
+#define INIT_SERIAL {initObject(), NULL, NULL}
 
 typedef struct {
 	Object super;
 	Object* onReadObject;
-	void onReadFunction ( void (*f)(unsigned char));
-	unsigned char buffer[BUFFERSIZE];
-	int memoryPosition;
+	void (*onReadFunction)(unsigned char);
 	
 } Serial;
 
 
-void initSerial(Serial* self, Object* onReadObject, void onReadFunction ( void (*f)(unsigned char)));
+void initSerial(Serial* self, Object* onReadObject, void (*onReadFunction)(unsigned char));
 void send(Serial* self, unsigned char input);
-void read();
 void serialAvailable(Serial* self, int* available);
 
 
