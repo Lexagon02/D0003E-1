@@ -4,7 +4,11 @@
 
 LCD.c
 
+Light.c
+
 main.c
+
+MainClass.c
 
 Serial.c
 

@@ -16,7 +16,7 @@ typedef struct{
 	int* southQueue;
 } MainClass;
 
-void run(MainClass* self);
-
+void runMain(MainClass* self);
+void onSensorRead(MainClass* self, unsigned char input);
 
 #endif /* MAINCLASS_H_ */

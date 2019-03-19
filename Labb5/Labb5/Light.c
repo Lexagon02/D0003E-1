@@ -13,23 +13,24 @@ void initLight(Light* self){
 	self -> currentTime = 0;
 	self -> time = 5; 
 	self -> state = 0;
-}
-
-void run(Light* self){
 	tick(self);
 }
 
 
+
 void tick(Light* self){
-	self->time = self->time -1;
-	
-	if((self->time)=<5){
+	writeChar('0' + (self->time % 10), 3);
+	if(self->time > 0){
+		self->time = self->time -1;
+	}
+	if((self->time) <= 5){
 		self->state = 0;
 	}
 	else{
 		self->state = 1;
 		
 	}
+	
 	SEND(MSEC(1000),MSEC(1010),self,tick,NULL);
 }
 
@@ -42,11 +43,11 @@ int getCurrentTime(Light* self){
 	return self -> currentTime;
 }
 
-void setTime(Light* self,int time){
+void setTime(Light* self, int time){
 	self -> time = time;
 }
 
 int getState(Light* self){
-	return self.state;
+	return self->state;
 }
 
