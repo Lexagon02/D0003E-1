@@ -1,4 +1,5 @@
 #include "Serial.h"
+#include "LCD.h"
 #include <avr/io.h>
 
 #define FOSC 8000000 // Clock speed
@@ -33,6 +34,7 @@ void initSerial(Serial* self, Object* onReadObject, void (*onReadFunction)(unsig
 void send(Serial* self, unsigned char input){
 	while(!(UCSR0A & (1 << UDRE0)));
 	UDR0 = input;
+	writeChar('0' + (input % 10), 5);
 	
 }
 
@@ -45,7 +47,8 @@ void read(Serial* self){
 	if(temp == 10) return;
 	
 	ASYNC(self->onReadObject, self->onReadFunction, temp);
-
+	writeChar('0' + (temp % 10), 0);
+	
 }
 
 void serialAvailable(Serial* self, int* available){

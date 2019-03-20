@@ -12,13 +12,7 @@ int main(void){
 	CLKPR = 0x80;
 	CLKPR = 0x00;
 	
-	initLCD();	
-	writeChar('H',0);
-
-	int northQueue = 0;
-	int southQueue = 0;
-	
-	MainClass mainClass = INIT_MAIN_CLASS(&northQueue, &southQueue);
+	MainClass mainClass = INIT_MAIN_CLASS;
 	TINYTIMBER(&mainClass, &runMain, NULL);
 }
 

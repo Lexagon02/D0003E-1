@@ -1,36 +1,25 @@
-
-/*
- * Light.c
- *
- * Created: 18-Mar-19 16:57:43
- *  Author: Ya boi Asmongold
- */ 
 #include "Light.h"
 #include "LCD.h"
 #include "TinyTimber.h"
+#include "MainClass.h"
 
-void initLight(Light* self){
-	self -> currentTime = 0;
-	self -> time = 5; 
-	self -> state = 0;
+void tick(Light* self);
+
+void initLight(Light* self, Serial* serial, Object* mainClass){
+	self->serial = serial;
+	self->mainClass = mainClass;
 	tick(self);
 }
 
-
-
 void tick(Light* self){
-	writeChar('0' + (self->time % 10), 3);
+	writeChar('0' + (self->state % 10), 3 + self->instance);
+	
 	if(self->time > 0){
-		self->time = self->time -1;
-	}
-	if((self->time) <= 5){
-		self->state = 0;
-	}
-	else{
-		self->state = 1;
-		
+		self->time--;
 	}
 	
+	self->state = (!self->time);
+	ASYNC(self->mainClass, &sendLightData, NULL);
 	SEND(MSEC(1000),MSEC(1010),self,tick,NULL);
 }
 
