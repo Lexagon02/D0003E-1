@@ -1,5 +1,5 @@
 Light.d Light.o: .././Light.c .././Light.h .././TinyTimber.h \
- .././Serial.h .././LCD.h .././MainClass.h
+ .././Serial.h .././LCD.h .././MainClass.h .././StatePusher.h
 
 .././Light.h:
 
@@ -10,3 +10,5 @@ Light.d Light.o: .././Light.c .././Light.h .././TinyTimber.h \
 .././LCD.h:
 
 .././MainClass.h:
+
+.././StatePusher.h:

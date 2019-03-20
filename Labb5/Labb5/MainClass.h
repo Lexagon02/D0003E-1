@@ -4,16 +4,18 @@
 #define NORTH 0
 #define SOUTH 1
 
-#define INIT_MAIN_CLASS {initObject(),INIT_SERIAL, {INIT_LIGHT(NORTH), INIT_LIGHT(SOUTH)}, {0, 0}}
+#define INIT_MAIN_CLASS {initObject(), INIT_SERIAL, INIT_STATEPUSHER, {INIT_LIGHT(NORTH), INIT_LIGHT(SOUTH)}, {0, 0}}
 
 #include "TinyTimber.h"
 #include "Serial.h"
 #include "Light.h"
+#include "StatePusher.h"
 
 typedef struct{
 	
 	Object super;
 	Serial serial;
+	StatePusher statePusher;
 	Light lights[2];
 	int queue[2];
 	

@@ -44,7 +44,7 @@ void read(Serial* self){
 	
 	unsigned char temp = UDR0;
 	
-	if(temp == 10) return;
+	//if(temp == 10) return;
 	
 	ASYNC(self->onReadObject, self->onReadFunction, temp);
 	writeChar('0' + (temp % 10), 0);

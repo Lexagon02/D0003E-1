@@ -19,6 +19,8 @@ void tick(Light* self){
 	}
 	
 	self->state = (!self->time);
+	self->currentTime = (self->state ? self->currentTime + 1 : 0);
+	
 	ASYNC(self->mainClass, &sendLightData, NULL);
 	SEND(MSEC(1000),MSEC(1010),self,tick,NULL);
 }

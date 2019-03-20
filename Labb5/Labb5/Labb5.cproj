@@ -163,6 +163,12 @@
     <Compile Include="Serial.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="StatePusher.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="StatePusher.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="TinyTimber.c">
       <SubType>compile</SubType>
     </Compile>

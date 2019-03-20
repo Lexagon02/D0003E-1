@@ -4,7 +4,6 @@
 #include "Light.h"
 
 void checkCarSensor(MainClass* self, char output);
-void checkQueue(MainClass* self);
 void checkStarvation(MainClass* self);
 void addCar(MainClass* self, int direction);
 void removeCar(MainClass* self, int direction);
@@ -14,6 +13,7 @@ void runMain(MainClass* self){
 	
 	initLCD();
 	initSerial(&(self->serial), (Object*)(self), (void*)&onSensorRead);
+	initStatePusher(&(self->statePusher), &(self->serial));
 	SYNC(&(self->lights[NORTH]), &initLight, self);
 	SYNC(&(self->lights[SOUTH]), &initLight, self);
 	
@@ -22,51 +22,44 @@ void runMain(MainClass* self){
 void onSensorRead(MainClass* self, unsigned char input){
 	
 	checkCarSensor(self, input);
-	//checkQueue(self);
-	checkStarvation(self);	
+	//checkStarvation(self);	
 	sendLightData(self);
 	
 }
 
-void checkCarSensor(MainClass* self, char output){
-	//Ifall det kommer in två bilar samtidigt så sätts det södra ljuset till rött
-	if(output == 5){
-		if((self->lights[NORTH].state & self->lights[SOUTH].state) &( (self->queue[NORTH] == 0) & (self->queue[SOUTH] == 0))){
-			
-			setLight(self,SOUTH, 5);
-			
-		}
-		
-	}
-	
-	//Northbound car arrival sensor activated
-	if(output & (1 << 0)){
-		addCar(self, NORTH);
-	}
-	if(output & (1 << 1)){
-		setLight(self, SOUTH, 5);
-		removeCar(self, NORTH);
-		//NorraBroSensor
-	}
-	if(output & (1 << 2)){
-		addCar(self, SOUTH);
-	}
-		
-	if(output & (1 << 3)){
-		setLight(self, NORTH, 5);
-		removeCar(self, SOUTH);
-		//södrabroskit
-	}
+int checkCarArrival(char input, int instance){
+	return (input & (1 << (instance == NORTH ? 0 : 2)));
 }
 
-void checkQueue(MainClass* self){
+int checkCarCrossing(char input, int instance){
+	return (input & (1 << (instance == NORTH ? 1 : 3)));
+}
 
-	if(!self->queue[NORTH]){
-		setLight(self, SOUTH, 10);
+void letCarCross(MainClass* self, int instance){
+	setLight(self, (instance == NORTH ? SOUTH : NORTH), 5);
+	removeCar(self, instance);
+}
+
+int checkCollision(MainClass* self, int input){
+	
+	return input == 0b1010;
+}
+
+void checkCarSensor(MainClass* self, char input){
+	
+	//Northbound car arrival sensor activated
+	if(checkCarArrival(input, NORTH)){
+		addCar(self, NORTH);
 	}
-
-	else if(!self->queue[SOUTH]){
-		setLight(self, SOUTH, 10);
+	if(checkCarArrival(input, SOUTH)){
+		addCar(self, SOUTH);
+	}
+	
+	if(checkCarCrossing(input, NORTH)){
+		letCarCross(self, NORTH);
+	}
+	if(checkCarCrossing(input, SOUTH)){
+		letCarCross(self, SOUTH);
 	}
 }
 
@@ -98,10 +91,17 @@ void sendLightData(MainClass* self){
 	
 	for(int i = 0; i < 2; i++){
 		
-		parsedValue |= (1 << ((i * 2) + (self->lights[i].state ? 0 : 1)));
+		if(self->lights[i].state){
+			parsedValue |= (1 << (i * 2));
+		}
+		else{
+			parsedValue |= (1 << (1 + i * 2));
+		}
 		
 	}
 	
-	ASYNC(&(self->serial), &send, (unsigned char)parsedValue);
+	//parsedValue = 0b1111;
+	
+	SYNC(&(self->statePusher), &setState, (unsigned char)parsedValue);
 	
 }
