@@ -17,16 +17,19 @@
 int openFile();
 void printByte(int value);
 void addCarToQueue(int* output, int* queue, int* incomming ,int instance );
-void parseData(int* input, int* output, int* northQueue, int* southQueue, int* northIncomming, int* southIncomming);
+void parseData(int* input, int* output, int* northQueue, int* southQueue, int* northIncomming, int* southIncomming, int* northLeft, int* southLeft);
 int getLightState(int* input, int instance);
-void letCarOverBridge(int* output, int* queue, int instance);
+void letCarOverBridge(int* output, int* queue, int* tot ,int instance);
 int carCrash(int* output);
 void localTest();
 void newLine();
 
 
 int main (){
-
+	//clock_t start_t, cur_t;
+	time_t start_t , end_t, duration_t;
+	start_t = time(0);
+	//start_t = clock();
 	int file = openFile();
 	int input;
 	int output;
@@ -35,23 +38,27 @@ int main (){
 	int southIncomming = 0;
 	int northIncomming = 0;
 	char inputChar = ' ';
-
+	int northLeft = 0;
+	int southLeft = 0;
 	newLine();
 	
 	while(1){
-		
 		while(read(file, &input, 1) == -1);
-		
-		
-		parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming);
-		
+		 
+		end_t = time(0);
+		duration_t = (end_t - start_t);
+		printf("\nDIFF: %d\n", duration_t);
+		if(duration_t >= 1){
+			start_t = time(0);
+			printf("TICK\n");
+			parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
+		}
 		printf("Input: ");
 		printByte(input);
 		printf("\nOutput: ");
 		printByte(output);
 		
-		printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\n", northIncomming, northQueue, southIncomming, southQueue);
-		write(file, &output, 1);
+		printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\nNorthLeft: %d, SouthLeft: %d\n", northIncomming, northQueue, southIncomming, southQueue,northLeft,southLeft);
 		
 		inputChar = getchar();
 		printf("%c\n", inputChar);
@@ -66,8 +73,12 @@ int main (){
 			southIncomming++;
 			northIncomming++;
 		}
+		
+		//printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\n", northIncomming, northQueue, southIncomming, southQueue);
+		
 		newLine();
-
+		write(file, &output, 1);
+	
 	}	
 	
 	return 0;
@@ -83,27 +94,28 @@ void localTest(){
 	int northQueue = 1;
 	int southIncomming = 0;
 	int northIncomming = 0;
+	int southLeft = 0;
+	int northLeft = 0;
 	
-	parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming);
+	parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
 	
 	printByte(output);
 	printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n", northIncomming, northQueue, southIncomming, southQueue);
 	
-	
-	
 } 
 
-void parseData(int* input, int* output, int* northQueue, int* southQueue, int* northIncomming, int* southIncomming){
+void parseData(int* input, int* output, int* northQueue, int* southQueue, int* northIncomming, int* southIncomming, int* northLeft, int* southLeft){
 	
-
+	*output = 0b0000;
+	
 	if(getLightState(input, NORTH) && *northQueue){
 			
-		letCarOverBridge(output, northQueue, NORTH);
+		letCarOverBridge(output, northQueue, northLeft, NORTH);
 			
 	}
 	if(getLightState(input, SOUTH) && *southQueue){
 			
-		letCarOverBridge(output, southQueue, SOUTH);
+		letCarOverBridge(output, southQueue, southLeft, SOUTH);
 	}
 	
 	if(*northIncomming){
@@ -141,12 +153,12 @@ void addCarToQueue(int* output, int* queue, int* incomming ,int instance ){
 	
 }
 
-void letCarOverBridge(int* output, int* queue, int instance){
+void letCarOverBridge(int* output, int* queue, int* tot ,int instance){
 	
 	*output |= (1 << (instance == NORTH ? 1 : 3));
 
 	(*queue)--;
-	
+	(*tot)++;
 }
 
 int getLightState(int* input, int instance){
