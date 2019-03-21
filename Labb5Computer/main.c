@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <termios.h>
 
 #define PATH "/dev/ttyS0"
 //#define PATH "/cygdrive/h/Kod/D0003E/Labb5Computer/output"
@@ -23,68 +25,121 @@ void letCarOverBridge(int* output, int* queue, int* tot ,int instance);
 int carCrash(int* output);
 void localTest();
 void newLine();
+void *runSim();
+void *readKeyboard();
+
+pthread_t runSim_id, readKeyboard_id;
+
+char inputChar = ' ';
 
 
-int main (){
+pthread_mutex_t lock;
+
+int main(){
+	
+	pthread_create(&runSim_id, NULL, runSim, NULL);
+	pthread_create(&readKeyboard_id, NULL, readKeyboard, NULL);
+	
+	struct termios tio;
+	struct termios tio_reset;
+	int tty_fd;
+	fd_set rdset;
+
+	unsigned char c='D';
+	
+	tcgetattr(STDIN_FILENO, &tio_reset);
+	
+	tio = tio_reset;
+
+	tio.c_lflag &= ~(ICANON) & ~(ECHO);
+	
+	tcsetattr(STDIN_FILENO, TCSANOW, &tio);
+
+	
+	pthread_join(runSim_id,NULL);
+	pthread_join(readKeyboard_id,NULL);
+	
+	//tcsetattr(STDIN_FILENO, TCSANOW, &tio_reset);
+	printf("Goodbye");
+	return 0;
+	
+}
+
+
+
+void *readKeyboard(void *vargp){
+	while(1){
+		pthread_mutex_lock(&lock);
+		
+		inputChar = getchar();
+		pthread_mutex_unlock(&lock);
+	
+	}
+}
+
+void *runSim(void *vargp){
 	//clock_t start_t, cur_t;
 	time_t start_t , end_t, duration_t;
 	start_t = time(0);
 	//start_t = clock();
 	int file = openFile();
-	int input;
+	int input = 0b0101;
 	int output;
 	int southQueue = 0;
 	int northQueue = 0;
 	int southIncomming = 0;
 	int northIncomming = 0;
-	char inputChar = ' ';
+	
 	int northLeft = 0;
 	int southLeft = 0;
-	newLine();
+	//newLine();
+	
 	
 	while(1){
-		while(read(file, &input, 1) == -1);
-		 
+		//while(read(file, &input, 1) == -1);
+		
 		end_t = time(0);
 		duration_t = (end_t - start_t);
-		printf("\nDIFF: %d\n", duration_t);
+		//printf("\nDIFF: %i\n", duration_t);
 		if(duration_t >= 1){
 			start_t = time(0);
 			printf("TICK\n");
 			parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
-		}
-		printf("Input: ");
-		printByte(input);
-		printf("\nOutput: ");
-		printByte(output);
 		
-		printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\nNorthLeft: %d, SouthLeft: %d\n", northIncomming, northQueue, southIncomming, southQueue,northLeft,southLeft);
+			printf("Input: ");
+			printByte(input);
+			printf("\nOutput: ");
+			printByte(output);
 		
-		inputChar = getchar();
-		printf("%c\n", inputChar);
+			printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\nNorthLeft: %d, SouthLeft: %d\n", northIncomming, northQueue, southIncomming, southQueue,northLeft,southLeft);
 		
-		if(inputChar == 'n'){
-			northIncomming++;
-		}
-		else if(inputChar == 's'){
-			southIncomming++;
-		}
-		else if(inputChar == 'b'){
-			southIncomming++;
-			northIncomming++;
-		}
+			//inputChar = getchar();
+			pthread_mutex_lock(&lock);
+			printf("%c\n", inputChar);
 		
+			if(inputChar == 'n'){
+				northIncomming++;
+			}
+			else if(inputChar == 's'){
+				southIncomming++;
+			}
+			else if(inputChar == 'b'){
+				southIncomming++;
+				northIncomming++;
+			}
+			inputChar = ' ';
+		}
 		//printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\n", northIncomming, northQueue, southIncomming, southQueue);
+		pthread_mutex_unlock(&lock);
 		
-		newLine();
+		//newLine();
 		write(file, &output, 1);
+		
+	}
 	
-	}	
 	
-	return 0;
 	
-}
-
+	};
 
 void localTest(){
 	
@@ -100,7 +155,7 @@ void localTest(){
 	parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
 	
 	printByte(output);
-	printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n", northIncomming, northQueue, southIncomming, southQueue);
+	//printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n", northIncomming, northQueue, southIncomming, southQueue);
 	
 } 
 
@@ -133,8 +188,10 @@ void parseData(int* input, int* output, int* northQueue, int* southQueue, int* n
 }
 
 int carCrash(int* output){
-	
-	return ((*output) == 0b1010);
+	if((*output) == 10 || (*output) == 15 || (*output) == 14 || (*output) == 11  ){	
+		return 1;
+	}
+	return 0;
 	
 }
 
