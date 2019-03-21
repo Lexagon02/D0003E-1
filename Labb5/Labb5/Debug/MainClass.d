@@ -1,5 +1,6 @@
 MainClass.d MainClass.o: .././MainClass.c .././MainClass.h \
- .././TinyTimber.h .././Serial.h .././Light.h .././LCD.h
+ .././TinyTimber.h .././Serial.h .././LCD.h .././LightHandler.h \
+ .././Light.h .././StatePusher.h
 
 .././MainClass.h:
 
@@ -7,6 +8,10 @@ MainClass.d MainClass.o: .././MainClass.c .././MainClass.h \
 
 .././Serial.h:
 
+.././LCD.h:
+
+.././LightHandler.h:
+
 .././Light.h:
 
-.././LCD.h:
+.././StatePusher.h:
