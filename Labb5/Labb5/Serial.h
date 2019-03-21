@@ -4,11 +4,10 @@
 #include "TinyTimber.h"
 #include "LCD.h"
 #define BUFFERSIZE 100
-#define INIT_SERIAL {initObject(), INIT_LCD, NULL, NULL}
+#define INIT_SERIAL {initObject(), NULL, NULL}
 
 typedef struct {
 	Object super;
-	Lcd lcd;
 	Object* onReadObject;
 	void (*onReadFunction)(unsigned char);
 	

@@ -3,16 +3,24 @@
 
 #include "LCD.h"
 
-void LCDWritePackage(int offcet, uint16_t pos0, uint16_t pos1, uint16_t pos2, uint16_t pos3);
+// Hacks up a long and writes them as chars to the screen
 
+void writeLong(long i){
+
+	int pos = 5;
+
+	while(i > 0){
+		
+		writeChar((i % 10) + '0', pos-- );
+		i = i / 10;
+	}
+
+}
 
 // Writes a char to the screen on a given possition
 
-void writeChar(Lcd* self, int* arg){
+void writeChar(char ch, int pos){
 	
-	char ch = (char)arg[0];
-	int pos = (int)arg[1];
-		
 	if (pos >= 0 && pos <= 5){
 		
 		switch (ch){
@@ -328,8 +336,8 @@ void clear(){
 
 // Inits the LCD by using some magic
 
-void initLCD(Lcd* self){
-		
+void initLCD(){
+	
 	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDMUX0) | (1<<LCDPM2) | (1<<LCDPM1) | (1<<LCDPM0);
 	LCDFRR = (0<<LCDPS2) | (1<<LCDCD2) | (1<<LCDCD1) | (1<<LCDCD0);
 	LCDCCR = (1<<LCDCC3) | (1<<LCDCC2) | (1<<LCDCC1) | (1<<LCDCC0);

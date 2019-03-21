@@ -1,79 +1,57 @@
 #include "MainClass.h"
 #include "Serial.h"
 
-int checkCarArrival(char input, int instance);
-int checkCarCrossing(MainClass* self, char input, int instance);
-void letCarCross(MainClass* self, int instance);
-int checkCollision(MainClass* self, int input);
-
-void addCar(MainClass* self, int direction);
-void removeCar(MainClass* self, int direction);
-
-void writeHere(MainClass* self){
-	int temp[2] = {(int)'H', 3};
-	SYNC(&(self->serial.lcd), &writeChar, temp);
-	while(1);
-}
+void checkCarArrived(MainClass* self, int* input, int direction);
+void parseLightStatus(MainClass* self, int* input, int direction);
+void cycleSensorRead(MainClass* self);
 
 void runMain(MainClass* self){
 	
 	initSerial(&(self->serial), (Object*)(self), (void*)&onSensorRead);
-	initStatePusher(&(self->statePusher), &(self->serial));
-	initLightHandler(&(self->lightHandler), &(self->statePusher));
-	//self->lightHandler.light[NORTH].state = RED;
+	initLightHandler(&(self->lightHandler), &(self->serial));
 	
-	SYNC(&(self->lightHandler), &onLightChange, NULL);
+	SYNC(self, &cycleSensorRead, NULL);
 }
 
-void onSensorRead(MainClass* self, unsigned char input){
+void cycleSensorRead(MainClass* self){
 	
-	//Northbound car arrival sensor activated
-	if(checkCarArrival(input, NORTH)){
-		addCar(self, NORTH);
+	onSensorRead(self, 0b0000);
+	
+	SEND(MSEC(1000), MSEC(2000), self, &cycleSensorRead, NULL);
+	
+}
+
+void onSensorRead(MainClass* self, int input){
+		
+	checkCarArrived(self, &input, NORTH);
+	checkCarArrived(self, &input, SOUTH);
+	
+	parseLightStatus(self, &input, NORTH);
+	parseLightStatus(self, &input, SOUTH);
+	
+	writeChar('0' + self->queue[0], 0);
+	writeChar('0' + self->queue[1], 5);
+	
+}
+
+void checkCarArrived(MainClass* self, int* input, int direction){
+
+	if((*input) & (1 << (direction == NORTH ? 0 : 2))){
+	
+		self->queue[direction]++;
+	
 	}
-	if(checkCarArrival(input, SOUTH)){
-		addCar(self, SOUTH);
+
+}
+
+void parseLightStatus(MainClass* self, int* input, int direction){
+	
+	int arg = direction;
+	SYNC(&(self->lightHandler), &getLightState, &arg);
+	
+	if(self->queue[direction] && arg == GREEN){
+		self->queue[direction]--;
+		SYNC(&(self->lightHandler), &pushLightState, direction);
 	}
 	
-	if(checkCarCrossing(self, input, NORTH)){
-		letCarCross(self, NORTH);
-	}
-	if(checkCarCrossing(self, input, SOUTH)){
-		letCarCross(self, SOUTH);
-	}
-	
-	SYNC(&(self->lightHandler), &onLightChange, NULL);
-	
-}
-
-int checkCarArrival(char input, int instance){
-	return (input & (1 << (instance == NORTH ? 0 : 2)));
-}
-
-int checkCarCrossing(MainClass* self, char input, int instance){
-	
-	int state;
-	SYNC(&(self->lightHandler.light[instance]), &getLightState, &state);
-	
-	return (input & (1 << (instance == NORTH ? 1 : 3))) && state == GREEN;
-}
-
-void letCarCross(MainClass* self, int instance){
-	
-	SYNC(&(self->lightHandler), &setLightPassingDirection, instance);
-	
-	removeCar(self, instance);
-}
-
-int checkCollision(MainClass* self, int input){
-	
-	return input == 0b1010;
-}
-
-void addCar(MainClass* self, int direction){
-	self->queue[direction]++;
-}
-
-void removeCar(MainClass* self, int direction){
-	self->queue[direction]--;
 }

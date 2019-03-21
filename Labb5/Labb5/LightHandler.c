@@ -1,66 +1,76 @@
-#define CROSSINGTIME 5000
-
 #include "LightHandler.h"
 
-void initLightHandler(LightHandler *self, StatePusher *statePusher){
+void cyckleLightState(LightHandler* self);
 
-	self->statePusher = statePusher;
-	int temp;
+int counter;
+void initLightHandler(LightHandler *self, Serial *serial){
 	
-	for(int i = 0; i < 2; i++ ){
-		initLight(&(self->light[i]), (Object*)self, (void*)&onLightChange);
-
-	}
+	counter = 0;
+	self->serial = serial;
+	cyckleLightState(self);
 
 }
 
-
-void setDelayedLight(LightHandler *self, int direction){
+void delayedLightStateReaction(LightHandler *self, int direction){
 	
-	SYNC(&(self->light[direction]), &setLight, GREEN);
+	
+	if(self->activePassingSemaphore[direction] == 1) {
+		self->lightState[direction == NORTH ? SOUTH : NORTH] = GREEN;
+		//onLightChange(self);
+	}
+	
+	if(self->activePassingSemaphore[direction] > 0){
+		self->activePassingSemaphore[direction]--;
+	}
+	
+}
+
+void pushLightState(LightHandler* self, int direction){
+		
+	self->activePassingSemaphore[direction]++;
+	
+	self->lightState[direction] = GREEN;
+	self->lightState[direction == NORTH ? SOUTH : NORTH] = RED;
+	SEND(MSEC(CARPASSINGTIME), MSEC(CARPASSINGTIME + 100), self, &delayedLightStateReaction, direction);
+	
 	ASYNC(self, &onLightChange, NULL);
 	
 }
 
-
-void setLightPassingDirection(LightHandler *self, int direction){
+void getLightState(LightHandler* self, int* arg){
 	
-	SYNC(&(self->light[direction]), &setLight, RED);
-	SYNC(&(self->light[direction == NORTH ? SOUTH : NORTH]), &setLight, RED);
-	SEND(MSEC(CROSSINGTIME), MSEC(CROSSINGTIME + 10), self, &setDelayedLight, direction);
+	*arg = self->lightState[*arg];
 	
-	SYNC(self, &onLightChange, NULL);
+}
 
+void cyckleLightState(LightHandler* self){
+	
+	ASYNC(self, &onLightChange, NULL);
+	SEND(MSEC(100), MSEC(200), self, &cyckleLightState, NULL);
+	
 }
 
 void onLightChange(LightHandler* self){
 	
 	int parsedValue = 0;
-	int temp;
 	
 	for(int i = 0; i < 2; i++){
 		
-		SYNC(&(self->light[i]), &getLightState, &temp);
-		
-		if(temp == GREEN){
+		if(self->lightState[i] == GREEN){
 			parsedValue |= (1 << (i * 2));
 		}
 		else{
-			parsedValue |= (1 << (1 + i * 2));
+			parsedValue |= (2 << (i * 2));
 		}
 		
 	}
 	
+	writeChar('0' + self->activePassingSemaphore[0], 1);
+	writeChar((self->lightState[0] == RED ? 'R' : 'G'), 2);
 	
-	SYNC(&(self->light[0]), &getLightState, &temp);
-	int temp2[2] = {(int)(temp == RED ? 'R' : 'G'), 2};
-	SYNC(&(self->statePusher->serial->lcd), &writeChar, temp2);
-	
-	SYNC(&(self->light[1]), &getLightState, &temp);
-	int temp3[2] = {(int)(temp == RED ? 'R' : 'G'), 3};
-	SYNC(&(self->statePusher->serial->lcd), &writeChar, temp3);
-	
-	ASYNC(self->statePusher, &setState, (unsigned char)parsedValue);
+	writeChar((self->lightState[1] == RED ? 'R' : 'G'), 3);
+	writeChar('0' + self->activePassingSemaphore[1], 4);
 	
 	
+	SYNC(self->serial, &send, parsedValue);
 }

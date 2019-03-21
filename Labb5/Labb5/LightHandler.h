@@ -10,24 +10,28 @@
 #define LIGHTHANDLER_H_
 
 #include "TinyTimber.h"
-#include "Light.h"
-#include "StatePusher.h"
+#include "Serial.h"
 
 #define NORTH 0
 #define SOUTH 1
-#define INIT_LIGHTHANDLER {initObject(), NULL, {INIT_LIGHT, INIT_LIGHT}}
+#define GREEN 1
+#define RED 0
+#define CARPASSINGTIME 5000
+
+#define INIT_LIGHTHANDLER {initObject(), NULL, {0, 0}, {GREEN, GREEN}}
 
 typedef struct{
 	
 	Object super;
-	StatePusher* statePusher;
-	Light light[2];
+	Serial *serial;
+	int activePassingSemaphore[2];
+	int lightState[2];
 	
 } LightHandler;
 
-void initLightHandler(LightHandler *self, StatePusher *statePusher);
-void setLightPassingDirection(LightHandler *self, int direction);
-
+void initLightHandler(LightHandler *self, Serial *serial);
+void getLightState(LightHandler* self, int* arg);
+void pushLightState(LightHandler* self, int direction);
 
 void onLightChange(LightHandler* self);
 #endif /* LIGHTHANDLER_H_ */
