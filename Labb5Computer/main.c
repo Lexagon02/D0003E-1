@@ -27,12 +27,14 @@ void localTest();
 void newLine();
 void *runSim();
 void *readKeyboard();
-
-pthread_t runSim_id, readKeyboard_id;
+void controllCarsOnBridge(int* c, int output);
+void *carOffBridge();
+pthread_t runSim_id, readKeyboard_id, carsOnBridge_id[5];
 
 char inputChar = ' ';
 int southIncomming = 0;
 int northIncomming = 0;
+int carsOnBridge = 0;
 
 pthread_mutex_t lock;
 
@@ -98,8 +100,9 @@ void *runSim(void *vargp){
 	int input = 0b0101;
 	int output;
 	int southQueue = 0;
-	int northQueue = 10;
+	int northQueue = 0;
 	
+	int bridgeSlotFree = 0;
 	
 	int northLeft = 0;
 	int southLeft = 0;
@@ -113,20 +116,22 @@ void *runSim(void *vargp){
 		duration_t = (end_t - start_t);
 		//printf("\nDIFF: %i\n", duration_t);
 		if(duration_t >= 1){
-			newLine();
+			//newLine();
 			start_t = time(0);
 			printf("TICK\n");
 			parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
-			
-			
 			
 			printf("Input: ");
 			printByte(input);
 			printf("\nOutput: ");
 			printByte(output);
-		
+		    controllCarsOnBridge(&bridgeSlotFree,output);
 			printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\nNorthLeft: %d, SouthLeft: %d\n", northIncomming, northQueue, southIncomming, southQueue,northLeft,southLeft);
-		
+			
+			
+			printf("\nCars On the bridge: %d", carsOnBridge);
+			
+			
 			//inputChar = getchar();
 			pthread_mutex_lock(&lock);
 			southIncomming = 0;
@@ -149,15 +154,39 @@ void *runSim(void *vargp){
 		}
 		//printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\n", northIncomming, northQueue, southIncomming, southQueue);
 		
-		
-		
 		write(file, &output, 1);
 		
 	}
-	
-	
-	
+
 	};
+	
+	
+void controllCarsOnBridge(int* bridgeFreeSlot,  int output){
+	if(output & (1 << 1)){
+		pthread_mutex_lock(&lock);
+		(carsOnBridge)++;
+		printf("\nDet kör en till bil på bron, jag har %d bilar på in bro\n",carsOnBridge );
+		pthread_create(&carsOnBridge_id[((*bridgeFreeSlot) % 5)], NULL, carOffBridge, carOffBridge());
+		(*bridgeFreeSlot)++;
+		pthread_mutex_unlock(&lock);
+	}
+	if(output & (1 << 3)){
+		pthread_mutex_lock(&lock);
+		(carsOnBridge)++;
+		printf("\nDet kör en till bil på bron, jag har %d bilar på in bro\n",carsOnBridge );
+		pthread_create(&carsOnBridge_id[((*bridgeFreeSlot) % 5)], NULL, carOffBridge, NULL);
+		(*bridgeFreeSlot)++;
+		pthread_mutex_unlock(&lock);
+	}
+	
+}
+void *carOffBridge(){
+	sleep(5);
+	pthread_mutex_lock(&lock);
+	carsOnBridge--;
+	printf("\nEn bil kör av bron, jag har %d bilar på in bro\n",carsOnBridge );
+	pthread_mutex_unlock(&lock);
+}
 
 void localTest(){
 	
@@ -169,7 +198,6 @@ void localTest(){
 	int northIncomming = 0;
 	int southLeft = 0;
 	int northLeft = 0;
-	
 	parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
 	
 	printByte(output);
