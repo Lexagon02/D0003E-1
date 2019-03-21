@@ -31,7 +31,8 @@ void *readKeyboard();
 pthread_t runSim_id, readKeyboard_id;
 
 char inputChar = ' ';
-
+int southIncomming = 0;
+int northIncomming = 0;
 
 pthread_mutex_t lock;
 
@@ -69,11 +70,22 @@ int main(){
 
 void *readKeyboard(void *vargp){
 	while(1){
-		pthread_mutex_lock(&lock);
 		
 		inputChar = getchar();
+		pthread_mutex_lock(&lock);
+		
+		if(inputChar == 'b'){
+			southIncomming++;
+			northIncomming++;
+		}
+		if(inputChar == 'n'){
+			northIncomming++;
+		}
+		if(inputChar == 's'){
+			southIncomming++;
+		}
+		
 		pthread_mutex_unlock(&lock);
-	
 	}
 }
 
@@ -86,9 +98,8 @@ void *runSim(void *vargp){
 	int input = 0b0101;
 	int output;
 	int southQueue = 0;
-	int northQueue = 0;
-	int southIncomming = 0;
-	int northIncomming = 0;
+	int northQueue = 10;
+	
 	
 	int northLeft = 0;
 	int southLeft = 0;
@@ -102,10 +113,13 @@ void *runSim(void *vargp){
 		duration_t = (end_t - start_t);
 		//printf("\nDIFF: %i\n", duration_t);
 		if(duration_t >= 1){
+			newLine();
 			start_t = time(0);
 			printf("TICK\n");
 			parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
-		
+			
+			
+			
 			printf("Input: ");
 			printByte(input);
 			printf("\nOutput: ");
@@ -115,24 +129,28 @@ void *runSim(void *vargp){
 		
 			//inputChar = getchar();
 			pthread_mutex_lock(&lock);
-			printf("%c\n", inputChar);
+			southIncomming = 0;
+			northIncomming = 0;
+			
+			pthread_mutex_unlock(&lock);
+			//printf("%c\n", inputChar);
 		
-			if(inputChar == 'n'){
-				northIncomming++;
-			}
-			else if(inputChar == 's'){
-				southIncomming++;
-			}
-			else if(inputChar == 'b'){
-				southIncomming++;
-				northIncomming++;
-			}
-			inputChar = ' ';
+// 			if(inputChar == 'n'){
+// 				northIncomming++;
+// 			}
+// 			else if(inputChar == 's'){
+// 				southIncomming++;
+// 			}
+// 			else if(inputChar == 'b'){
+// 				southIncomming++;
+// 				northIncomming++;
+// 			}
+			//inputChar = ' ';
 		}
 		//printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\n", northIncomming, northQueue, southIncomming, southQueue);
-		pthread_mutex_unlock(&lock);
 		
-		//newLine();
+		
+		
 		write(file, &output, 1);
 		
 	}
@@ -204,9 +222,9 @@ void addCarToQueue(int* output, int* queue, int* incomming ,int instance ){
 			
 		*output |= (1 << 2); 
 	}
-	
-	(*incomming)--;
-	(*queue)++;
+	//Ändrat
+	(*queue) = (*queue) + (*incomming);
+	//(*incomming) ==0 ;
 	
 }
 
