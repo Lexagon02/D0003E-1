@@ -2,24 +2,23 @@
 #define LIGHT_H_
 
 #include "TinyTimber.h"
-#include "Serial.h"
-#define INIT_LIGHT(instance) {initObject(), NULL, NULL, instance, 0, 5, 0}
 
-typedef struct{
+#define RED 0
+#define GREEN 1
+
+#define INIT_LIGHT {initObject(), GREEN, NULL, NULL}
+
+typedef struct {
+
 	Object super;
-	Serial* serial;
-	Object* mainClass;
-	int instance;
-	int currentTime;
-	int time;
 	int state;
+	Object* onStateChangeObject;
+	void (*onStateChangeFunction)(int);
+	
 } Light;
 
-void initLight(Light* self, Serial* serial, Object* mainClass);
-int getCurrentTime(Light* self);
-void setTime(Light* self, int time);
-int getTime(Light* self);
-int getState(Light* self);
+void initLight(Light* self, Object* onStateChangeObject, void (*onStateChangeFunction)(int));
+void getLightState(Light* self, int* state);
+void setLight(Light* self, int state);
 
-
-#endif
+#endif /* LIGHT_H_ */

@@ -148,6 +148,12 @@
     <Compile Include="Light.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="LightHandler.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="LightHandler.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>

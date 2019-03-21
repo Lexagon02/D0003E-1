@@ -1,14 +1,11 @@
 #ifndef MAINCLASS_H_
 #define MAINCLASS_H_
 
-#define NORTH 0
-#define SOUTH 1
-
-#define INIT_MAIN_CLASS {initObject(), INIT_SERIAL, INIT_STATEPUSHER, {INIT_LIGHT(NORTH), INIT_LIGHT(SOUTH)}, {0, 0}}
+#define INIT_MAIN_CLASS {initObject(), INIT_SERIAL, INIT_STATEPUSHER, INIT_LIGHTHANDLER, {0, 0}}
 
 #include "TinyTimber.h"
 #include "Serial.h"
-#include "Light.h"
+#include "LightHandler.h"
 #include "StatePusher.h"
 
 typedef struct{
@@ -16,7 +13,7 @@ typedef struct{
 	Object super;
 	Serial serial;
 	StatePusher statePusher;
-	Light lights[2];
+	LightHandler lightHandler;
 	int queue[2];
 	
 } MainClass;

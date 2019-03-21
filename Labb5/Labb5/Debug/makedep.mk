@@ -6,6 +6,8 @@ LCD.c
 
 Light.c
 
+LightHandler.c
+
 main.c
 
 MainClass.c
