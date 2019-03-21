@@ -29,12 +29,16 @@ void *runSim();
 void *readKeyboard();
 void controllCarsOnBridge(int* c, int output);
 void *carOffBridge();
+int checkTimeOut();
+
 pthread_t runSim_id, readKeyboard_id, carsOnBridge_id[5];
 
 char inputChar = ' ';
 int southIncomming = 0;
 int northIncomming = 0;
 int carsOnBridge = 0;
+//Jag vet att det ‰r olagligt
+time_t start_t , end_t, duration_t;
 
 pthread_mutex_t lock;
 
@@ -93,11 +97,11 @@ void *readKeyboard(void *vargp){
 
 void *runSim(void *vargp){
 	//clock_t start_t, cur_t;
-	time_t start_t , end_t, duration_t;
+	
 	start_t = time(0);
 	//start_t = clock();
 	int file = openFile();
-	int input = 0b0101;
+	int input = 0b0000;
 	int output;
 	int southQueue = 0;
 	int northQueue = 0;
@@ -110,35 +114,39 @@ void *runSim(void *vargp){
 	
 	
 	while(1){
-		//while(read(file, &input, 1) == -1);
 		
-		end_t = time(0);
-		duration_t = (end_t - start_t);
+	
+		while(read(file, &input, 1) == -1);
 		//printf("\nDIFF: %i\n", duration_t);
-		if(duration_t >= 1){
-			//newLine();
-			start_t = time(0);
-			printf("TICK\n");
-			parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
+		newLine();
+		
+		//printf("\nDuration: %d\n", duration_t);
+		parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
 			
-			printf("Input: ");
-			printByte(input);
-			printf("\nOutput: ");
-			printByte(output);
-		    controllCarsOnBridge(&bridgeSlotFree,output);
-			printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\nNorthLeft: %d, SouthLeft: %d\n", northIncomming, northQueue, southIncomming, southQueue,northLeft,southLeft);
-			
-			
-			printf("\nCars On the bridge: %d", carsOnBridge);
+		printf("Input: ");
+		printByte(input);
+		printf("\nOutput: ");
+		printByte(output);
+		//controllCarsOnBridge(&bridgeSlotFree,output);
+		printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\nNorthLeft: %d, SouthLeft: %d\n", northIncomming, northQueue, southIncomming, southQueue,northLeft,southLeft);
 			
 			
-			//inputChar = getchar();
-			pthread_mutex_lock(&lock);
-			southIncomming = 0;
-			northIncomming = 0;
+		//printf("\nCars On the bridge: %d", carsOnBridge);
 			
-			pthread_mutex_unlock(&lock);
-			//printf("%c\n", inputChar);
+			
+		//inputChar = getchar();
+		pthread_mutex_lock(&lock);
+		southIncomming = 0;
+		northIncomming = 0;
+			
+		pthread_mutex_unlock(&lock);
+			
+			
+		write(file, &output, 1);
+			
+			
+			
+		//printf("%c\n", inputChar);
 		
 // 			if(inputChar == 'n'){
 // 				northIncomming++;
@@ -150,11 +158,12 @@ void *runSim(void *vargp){
 // 				southIncomming++;
 // 				northIncomming++;
 // 			}
-			//inputChar = ' ';
-		}
+		//inputChar = ' ';
+	
+		
 		//printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\n", northIncomming, northQueue, southIncomming, southQueue);
 		
-		write(file, &output, 1);
+
 		
 	}
 
@@ -209,14 +218,16 @@ void parseData(int* input, int* output, int* northQueue, int* southQueue, int* n
 	
 	*output = 0b0000;
 	
-	if(getLightState(input, NORTH) && *northQueue){
+	if(checkTimeOut()){
+		if(getLightState(input, NORTH) && *northQueue){
 			
-		letCarOverBridge(output, northQueue, northLeft, NORTH);
+			letCarOverBridge(output, northQueue, northLeft, NORTH);
 			
-	}
-	if(getLightState(input, SOUTH) && *southQueue){
+		}
+		if(getLightState(input, SOUTH) && *southQueue){
 			
-		letCarOverBridge(output, southQueue, southLeft, SOUTH);
+			letCarOverBridge(output, southQueue, southLeft, SOUTH);
+		}
 	}
 	
 	if(*northIncomming){
@@ -228,7 +239,7 @@ void parseData(int* input, int* output, int* northQueue, int* southQueue, int* n
 	}
 	
 	if(carCrash(output)){
-		printf("Full fart framÂt o inga bromsar!!\n");
+		printf("Full fart framÂt o inga bromsar!!  ≈≈≈≈NEEEEJ BARN FAMILJEN\n");
 	}
 	
 }
@@ -251,17 +262,31 @@ void addCarToQueue(int* output, int* queue, int* incomming ,int instance ){
 		*output |= (1 << 2); 
 	}
 	//ƒndrat
-	(*queue) = (*queue) + (*incomming);
-	//(*incomming) ==0 ;
+	if((*incomming) > 0){
+		(*queue)++;
+	}
+	
 	
 }
 
+int checkTimeOut(){
+	end_t = time(0);
+	if(end_t - start_t >= 1){
+		start_t = end_t;
+		return 1;
+	}	
+	return 0;
+};
+
 void letCarOverBridge(int* output, int* queue, int* tot ,int instance){
 	
+	printf("\nTICK\n");
+	start_t = time(0);
 	*output |= (1 << (instance == NORTH ? 1 : 3));
 
 	(*queue)--;
 	(*tot)++;
+	
 }
 
 int getLightState(int* input, int instance){
