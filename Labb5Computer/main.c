@@ -19,24 +19,37 @@
 int openFile();
 void printByte(int value);
 void addCarToQueue(int* output, int* queue, int* incomming ,int instance );
-void parseData(int* input, int* output, int* northQueue, int* southQueue, int* northIncomming, int* southIncomming, int* northLeft, int* southLeft);
+void parseData(int* input, int* output, int* northQueue, int* southQueue, int* northIncomming, int* southIncomming, int* northLeft, int* southLeft, int *localChanged);
 int getLightState(int* input, int instance);
 void letCarOverBridge(int* output, int* queue, int* tot ,int instance);
 int carCrash(int* output);
-void localTest();
 void newLine();
 void *runSim();
 void *readKeyboard();
+void *ThreadRead();
 void controllCarsOnBridge(int* c, int output);
-void *carOffBridge();
+void *carOffBridge(void* direction);
 int checkTimeOut();
-
-pthread_t runSim_id, readKeyboard_id, carsOnBridge_id[5];
+void carOnBridge(int direction);
+void *timeCheck(void *vargp);
+pthread_t runSim_id, readKeyboard_id, read_id, time_id,carsOnBridge_id[2][5];
 
 char inputChar = ' ';
 int southIncomming = 0;
 int northIncomming = 0;
-int carsOnBridge = 0;
+int southBridge = 0;
+int northBridge = 0;
+
+int onBridge[2] = {0, 0};
+
+int sent = 0;
+
+int timeFlag = 1;
+int globalChanged = 0;
+
+int file;
+int output_g;
+int input_g;
 //Jag vet att det är olagligt
 time_t start_t , end_t, duration_t;
 
@@ -44,8 +57,11 @@ pthread_mutex_t lock;
 
 int main(){
 	
+	file = openFile();
+	
 	pthread_create(&runSim_id, NULL, runSim, NULL);
 	pthread_create(&readKeyboard_id, NULL, readKeyboard, NULL);
+	pthread_create(&read_id, NULL, ThreadRead, NULL);
 	
 	struct termios tio;
 	struct termios tio_reset;
@@ -98,148 +114,168 @@ void *readKeyboard(void *vargp){
 void *runSim(void *vargp){
 	//clock_t start_t, cur_t;
 	
-	start_t = time(0);
+	time(&start_t);
 	//start_t = clock();
-	int file = openFile();
+	
 	int input = 0b0000;
 	int output;
 	int southQueue = 0;
 	int northQueue = 0;
 	
-	int bridgeSlotFree = 0;
-	
 	int northLeft = 0;
 	int southLeft = 0;
-	//newLine();
 	
+	int lastInput = input;
+	int lastOutput = output;
+	int outputOverZero = output;
+	
+	
+	int localChanged;
 	
 	while(1){
+		pthread_mutex_lock(&lock);
+		input = input_g;
 		
-	
-		while(read(file, &input, 1) == -1);
-		//printf("\nDIFF: %i\n", duration_t);
-		newLine();
+		pthread_mutex_lock(&lock);
 		
 		//printf("\nDuration: %d\n", duration_t);
-		parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
+		parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft, &localChanged);
+
+		if(lastInput != input){
+			localChanged = 1;
+			lastInput = input;
+		}
+		if(lastOutput != output){
+			localChanged = 1;
+			lastOutput = output;
+		}
+		if(output != 0){
+			outputOverZero = output;
+		}
+		
+		pthread_mutex_lock(&lock);
+		localChanged += globalChanged;
+		globalChanged = 0;
+		pthread_mutex_unlock(&lock);
+
+		if(localChanged){
 			
-		printf("Input: ");
-		printByte(input);
-		printf("\nOutput: ");
-		printByte(output);
-		//controllCarsOnBridge(&bridgeSlotFree,output);
-		printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\nNorthLeft: %d, SouthLeft: %d\n", northIncomming, northQueue, southIncomming, southQueue,northLeft,southLeft);
+			printf("\x1b[2J");
+			printf("Input: ");
+			printByte(input);
+			printf("\nOutput: ");
+			printByte(outputOverZero);
 			
+			printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\nNorthLeft: %d, SouthLeft: %d\n", northIncomming, northQueue, southIncomming, southQueue,northLeft,southLeft);
+			printf("North cars on bridge: %d \nSouth cars on bridge: %d \n",onBridge[NORTH], onBridge[SOUTH]);
 			
-		//printf("\nCars On the bridge: %d", carsOnBridge);
-			
-			
-		//inputChar = getchar();
+		}
+
 		pthread_mutex_lock(&lock);
 		southIncomming = 0;
 		northIncomming = 0;
-			
+		
+		output_g = output;
+		
+		sent = 0;	
+		localChanged = 0;
+		
 		pthread_mutex_unlock(&lock);
-			
-			
-		write(file, &output, 1);
-			
-			
-			
-		//printf("%c\n", inputChar);
 		
-// 			if(inputChar == 'n'){
-// 				northIncomming++;
-// 			}
-// 			else if(inputChar == 's'){
-// 				southIncomming++;
-// 			}
-// 			else if(inputChar == 'b'){
-// 				southIncomming++;
-// 				northIncomming++;
-// 			}
-		//inputChar = ' ';
-	
+		output = 0;
+		while(1){
 		
-		//printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\n", northIncomming, northQueue, southIncomming, southQueue);
+			pthread_mutex_lock(&lock);
+			if(sent){
+				break;
+			}
+			pthread_mutex_unlock(&lock);
+			
+		}
 		
-
 		
 	}
 
-	};
+}
 	
 	
-void controllCarsOnBridge(int* bridgeFreeSlot,  int output){
-	if(output & (1 << 1)){
+void *ThreadRead(void *vargp){
+	
+	while(1){
+		
 		pthread_mutex_lock(&lock);
-		(carsOnBridge)++;
-		printf("\nDet kör en till bil på bron, jag har %d bilar på in bro\n",carsOnBridge );
-		pthread_create(&carsOnBridge_id[((*bridgeFreeSlot) % 5)], NULL, carOffBridge, carOffBridge());
-		(*bridgeFreeSlot)++;
+		write(file,&output_g, 1);
+		output_g = 0;
+		sent = 1;
 		pthread_mutex_unlock(&lock);
-	}
-	if(output & (1 << 3)){
+		
 		pthread_mutex_lock(&lock);
-		(carsOnBridge)++;
-		printf("\nDet kör en till bil på bron, jag har %d bilar på in bro\n",carsOnBridge );
-		pthread_create(&carsOnBridge_id[((*bridgeFreeSlot) % 5)], NULL, carOffBridge, NULL);
-		(*bridgeFreeSlot)++;
+		while(read(file, &input_g, 1) == -1);
 		pthread_mutex_unlock(&lock);
+	
 	}
+	
 	
 }
-void *carOffBridge(){
+	
+	
+void *carOffBridge(void* direction){
 	sleep(5);
 	pthread_mutex_lock(&lock);
-	carsOnBridge--;
-	printf("\nEn bil kör av bron, jag har %d bilar på in bro\n",carsOnBridge );
+
+	onBridge[(int)direction]--;
+	globalChanged = 1;
+	
 	pthread_mutex_unlock(&lock);
 }
 
-void localTest(){
+void carOnBridge(int direction){
 	
-	int input = 0b1010;
-	int output= 0b0000;
-	int southQueue = 1;
-	int northQueue = 1;
-	int southIncomming = 0;
-	int northIncomming = 0;
-	int southLeft = 0;
-	int northLeft = 0;
-	parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft);
+	pthread_mutex_lock(&lock);
 	
-	printByte(output);
-	//printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n", northIncomming, northQueue, southIncomming, southQueue);
-	
-} 
+	if(onBridge[direction] < 5){
+		
+		pthread_create(&(carsOnBridge_id[direction][(onBridge[direction])++]), NULL, carOffBridge, direction);
+		globalChanged = 1;
 
-void parseData(int* input, int* output, int* northQueue, int* southQueue, int* northIncomming, int* southIncomming, int* northLeft, int* southLeft){
+	}
+
+	pthread_mutex_unlock(&lock);
+	
+}
+
+
+void parseData(int* input, int* output, int* northQueue, int* southQueue, int* northIncomming, int* southIncomming, int* northLeft, int* southLeft, int *localChanged){
 	
 	*output = 0b0000;
 	
 	if(checkTimeOut()){
 		if(getLightState(input, NORTH) && *northQueue){
-			
+			carOnBridge(NORTH);
 			letCarOverBridge(output, northQueue, northLeft, NORTH);
+			*localChanged = 1;
 			
 		}
 		if(getLightState(input, SOUTH) && *southQueue){
-			
+			carOnBridge(SOUTH);
 			letCarOverBridge(output, southQueue, southLeft, SOUTH);
+			*localChanged = 1;
 		}
 	}
 	
 	if(*northIncomming){
 		addCarToQueue(output, northQueue, northIncomming, NORTH);
+		*localChanged = 1;
 	}
 	
 	if(*southIncomming){
 		addCarToQueue(output, southQueue, southIncomming, SOUTH);
+		*localChanged = 1;
 	}
 	
 	if(carCrash(output)){
 		printf("Full fart framåt o inga bromsar!!  ÅÅÅÅNEEEEJ BARN FAMILJEN\n");
+		*localChanged = 1;
 	}
 	
 }
@@ -270,18 +306,29 @@ void addCarToQueue(int* output, int* queue, int* incomming ,int instance ){
 }
 
 int checkTimeOut(){
-	end_t = time(0);
-	if(end_t - start_t >= 1){
-		start_t = end_t;
+	pthread_mutex_lock(&lock);
+	if(timeFlag){
+		timeFlag = 0;
+		pthread_mutex_unlock(&lock);
+		pthread_create(&time_id, NULL, timeCheck, NULL);
+		
 		return 1;
-	}	
+	}
+	pthread_mutex_unlock(&lock);
 	return 0;
 };
+
+void *timeCheck(void *vargp){
+	sleep(1);
+	pthread_mutex_lock(&lock);
+	timeFlag = 1;
+	pthread_mutex_unlock(&lock);
+}
 
 void letCarOverBridge(int* output, int* queue, int* tot ,int instance){
 	
 	printf("\nTICK\n");
-	start_t = time(0);
+	//start_t = time(0);
 	*output |= (1 << (instance == NORTH ? 1 : 3));
 
 	(*queue)--;
