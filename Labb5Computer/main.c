@@ -7,8 +7,10 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <termios.h>
+#include <io.h>
 
 #define PATH "/dev/ttyS0"
+#define DEBUG_PATH "/cygdrive/h/D0003E/D0003E/Labb5Computer/output.txt"
 //#define PATH "/cygdrive/h/Kod/D0003E/Labb5Computer/output"
 // #define PATH "/mnt/d/Mega/Kod/C/D0003E/Labb5Computer/output.txt"
  
@@ -32,9 +34,12 @@ void *carOffBridge(void* direction);
 int checkTimeOut();
 void carOnBridge(int direction);
 void *timeCheck(void *vargp);
+void writeToDebug(int output);
+
 pthread_t runSim_id, readKeyboard_id, read_id, time_id,carsOnBridge_id[2][5];
 
 char inputChar = ' ';
+const char nwln = '\n';
 int southIncomming = 0;
 int northIncomming = 0;
 int southBridge = 0;
@@ -48,6 +53,7 @@ int timeFlag = 1;
 int globalChanged = 0;
 
 int file;
+int debugFile;
 int output_g;
 int input_g;
 //Jag vet att det är olagligt
@@ -58,6 +64,9 @@ pthread_mutex_t lock;
 int main(){
 	
 	file = openFile();
+	debugFile = open(DEBUG_PATH, O_RDWR);
+	
+	sleep(1);
 	
 	pthread_create(&runSim_id, NULL, runSim, NULL);
 	pthread_create(&readKeyboard_id, NULL, readKeyboard, NULL);
@@ -156,7 +165,6 @@ void *runSim(void *vargp){
 		pthread_mutex_lock(&lock);
 		localChanged += globalChanged;
 		globalChanged = 0;
-		pthread_mutex_unlock(&lock);
 
 		if(localChanged){
 			
@@ -168,10 +176,10 @@ void *runSim(void *vargp){
 			
 			printf("\nNorth incomming: %d, North queue: %d\nSouth incomming: %d, South queue: %d\n\nNorthLeft: %d, SouthLeft: %d\n", northIncomming, northQueue, southIncomming, southQueue,northLeft,southLeft);
 			printf("North cars on bridge: %d \nSouth cars on bridge: %d \n",onBridge[NORTH], onBridge[SOUTH]);
+			printf("Time flag: %d\n", timeFlag);
 			
 		}
 
-		pthread_mutex_lock(&lock);
 		southIncomming = 0;
 		northIncomming = 0;
 		
@@ -204,7 +212,9 @@ void *ThreadRead(void *vargp){
 	while(1){
 		
 		pthread_mutex_lock(&lock);
-		write(file,&output_g, 1);
+		write(file, &output_g, 1);
+		writeToDebug(output_g);
+		
 		output_g = 0;
 		sent = 1;
 		pthread_mutex_unlock(&lock);
@@ -212,7 +222,8 @@ void *ThreadRead(void *vargp){
 		pthread_mutex_lock(&lock);
 		while(read(file, &input_g, 1) == -1);
 		pthread_mutex_unlock(&lock);
-	
+		
+		
 	}
 	
 	
@@ -281,10 +292,12 @@ void parseData(int* input, int* output, int* northQueue, int* southQueue, int* n
 }
 
 int carCrash(int* output){
-	if((*output) == 10 || (*output) == 15 || (*output) == 14 || (*output) == 11  ){	
+	
+	if(northBridge && southBridge){
 		return 1;
 	}
 	return 0;
+	
 	
 }
 
@@ -305,6 +318,16 @@ void addCarToQueue(int* output, int* queue, int* incomming ,int instance ){
 	
 }
 
+void *timeCheck(void *vargp){
+	sleep(1);
+	pthread_mutex_lock(&lock);
+	timeFlag = 1;
+	globalChanged = 1;
+	pthread_mutex_unlock(&lock);
+	
+	
+}
+
 int checkTimeOut(){
 	pthread_mutex_lock(&lock);
 	if(timeFlag){
@@ -317,13 +340,6 @@ int checkTimeOut(){
 	pthread_mutex_unlock(&lock);
 	return 0;
 };
-
-void *timeCheck(void *vargp){
-	sleep(1);
-	pthread_mutex_lock(&lock);
-	timeFlag = 1;
-	pthread_mutex_unlock(&lock);
-}
 
 void letCarOverBridge(int* output, int* queue, int* tot ,int instance){
 	
@@ -392,6 +408,7 @@ int openFile(){
 	return temp;
 }
 
+
 void newLine(){
 	
 	for(int i = 0; i < 100; i++ ){
@@ -399,5 +416,26 @@ void newLine(){
 		printf("\n");
 		
 	}
+	
+}
+
+void writeToDebug(int output){
+	
+	char temp[4];
+	for(int i = 0; i < 4; i++ ){
+		
+		temp[3 - i] = '0' + (output & 1);
+		
+		output = output >> 1;
+	}
+	
+	for(int i = 0; i < 4; i++ ){
+		
+		write(debugFile, &(temp[i]), 1);
+		
+		
+	}
+	
+	write(debugFile, &nwln, 1);	
 	
 }
