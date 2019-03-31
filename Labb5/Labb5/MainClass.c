@@ -1,24 +1,21 @@
 #include "MainClass.h"
 #include "Serial.h"
 
+#define MAXCARS 10
+
 void checkCarArrived(MainClass* self, int* input, int direction);
-void parseLightStatus(MainClass* self, int* input, int direction);
-void cycleSensorRead(MainClass* self);
+void tryToPass(MainClass* self, int* input, int direction);
+void checkBridgeState(MainClass* self, int* input, int direction);
+
 
 void runMain(MainClass* self){
 	
 	initSerial(&(self->serial), (Object*)(self), (void*)&onSensorRead);
 	initLightHandler(&(self->lightHandler), &(self->serial));
 	
-	SYNC(self, &cycleSensorRead, NULL);
-}
+	SEND(MSEC(100), MSEC(200), self, &onSensorRead, 0b0000);
+	SEND(MSEC(100), MSEC(200), &(self->lightHandler), &onLightChange, NULL);
 
-void cycleSensorRead(MainClass* self){
-	
-	onSensorRead(self, 0b0000);
-	
-	SEND(MSEC(1000), MSEC(2000), self, &cycleSensorRead, NULL);
-	
 }
 
 void onSensorRead(MainClass* self, int input){
@@ -26,12 +23,16 @@ void onSensorRead(MainClass* self, int input){
 	checkCarArrived(self, &input, NORTH);
 	checkCarArrived(self, &input, SOUTH);
 	
-	parseLightStatus(self, &input, NORTH);
-	parseLightStatus(self, &input, SOUTH);
+	checkBridgeState(self, &input, NORTH);
+	checkBridgeState(self, &input, SOUTH);
 	
-	writeChar('0' + self->queue[0], 0);
-	writeChar('0' + self->queue[1], 5);
+	tryToPass(self, &input, NORTH);
+	tryToPass(self, &input, SOUTH);
 	
+	writeChar('0' + (self->queue[NORTH] % 10), 0);
+	writeChar('0' + (self->queue[SOUTH] % 10), 4);
+	
+	SYNC(&(self->lightHandler), &onLightChange, NULL);
 }
 
 void checkCarArrived(MainClass* self, int* input, int direction){
@@ -44,13 +45,35 @@ void checkCarArrived(MainClass* self, int* input, int direction){
 
 }
 
-void parseLightStatus(MainClass* self, int* input, int direction){
+void tryToPass(MainClass* self, int* input, int direction){
 	
-	int arg = direction;
-	SYNC(&(self->lightHandler), &getLightState, &arg);
-	
-	if(self->queue[direction] && arg == GREEN){
+	if(*input & (1 << (direction == NORTH ? 1 : 3))){
+		
+		SYNC(&(self->lightHandler), &pushCarToBridge, direction);
+		
+		self->passedSinceChange[direction == NORTH ? SOUTH : NORTH] = 0;
+		self->passedSinceChange[direction]++;
+		
 		self->queue[direction]--;
+	}
+	
+	
+}
+
+void checkBridgeState(MainClass* self, int* input, int direction){
+
+	int lightThis = direction;
+	SYNC(&(self->lightHandler), &getLightState, &lightThis);
+	
+	int lightOther = ((direction == NORTH) ? SOUTH : NORTH);
+	SYNC(&(self->lightHandler), &getLightState, &lightOther);
+	
+	
+	if((self->passedSinceChange[direction] >= MAXCARS) && self->queue[((direction == NORTH) ? SOUTH : NORTH)]){
+		SYNC(&(self->lightHandler), &setLightStateRed, direction);
+		SYNC(&(self->lightHandler), &pushLightState, direction == NORTH ? SOUTH : NORTH);
+	}
+	else if(self->queue[direction] && (lightOther == RED)){
 		SYNC(&(self->lightHandler), &pushLightState, direction);
 	}
 	

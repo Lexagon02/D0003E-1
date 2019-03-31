@@ -1,39 +1,48 @@
 #include "LightHandler.h"
 
-void cyckleLightState(LightHandler* self);
-
 int counter;
+
 void initLightHandler(LightHandler *self, Serial *serial){
 	
 	counter = 0;
 	self->serial = serial;
-	cyckleLightState(self);
-
 }
 
-void delayedLightStateReaction(LightHandler *self, int direction){
+void lightCycler(LightHandler *self){
 	
+	SEND(MSEC(100), MSEC(110), self, &lightCycler, NULL);
+}
+
+void carOffBridge(LightHandler* self){
 	
-	if(self->activePassingSemaphore[direction] == 1) {
-		self->lightState[direction == NORTH ? SOUTH : NORTH] = GREEN;
-		//onLightChange(self);
-	}
+	self->carsOnBridge--;
 	
-	if(self->activePassingSemaphore[direction] > 0){
-		self->activePassingSemaphore[direction]--;
+	if(!self->carsOnBridge){
+		self->lightState[NORTH] = RED;
+		self->lightState[SOUTH] = RED;
+		SYNC(self, &onLightChange, NULL);
+
 	}
 	
 }
 
 void pushLightState(LightHandler* self, int direction){
-		
-	self->activePassingSemaphore[direction]++;
 	
-	self->lightState[direction] = GREEN;
-	self->lightState[direction == NORTH ? SOUTH : NORTH] = RED;
-	SEND(MSEC(CARPASSINGTIME), MSEC(CARPASSINGTIME + 100), self, &delayedLightStateReaction, direction);
+	if(self->lightState[direction] == RED && !self->carsOnBridge){
+		self->lightState[direction] = GREEN;
+	}
+}
 	
-	ASYNC(self, &onLightChange, NULL);
+void pushCarToBridge(LightHandler* self, int direction){
+
+	self->carsOnBridge++;
+	SEND(MSEC(CARPASSINGTIME), MSEC(CARPASSINGTIME + 100), self, &carOffBridge, NULL);
+	
+}
+
+void getCarsOnBridge(LightHandler* self, int* output){
+	
+	*output = self->carsOnBridge;
 	
 }
 
@@ -43,11 +52,8 @@ void getLightState(LightHandler* self, int* arg){
 	
 }
 
-void cyckleLightState(LightHandler* self){
-	
-	ASYNC(self, &onLightChange, NULL);
-	SEND(MSEC(100), MSEC(200), self, &cyckleLightState, NULL);
-	
+void setLightStateRed(LightHandler* self, int direction){
+	self->lightState[direction] = RED;
 }
 
 void onLightChange(LightHandler* self){
@@ -64,13 +70,10 @@ void onLightChange(LightHandler* self){
 		}
 		
 	}
+		
+	writeChar(((self->lightState[NORTH] == GREEN) ? 'G' : 'R'), 1);
+	writeChar(((self->lightState[SOUTH] == GREEN) ? 'G' : 'R'), 3);
+	writeChar('0' + (self->carsOnBridge % 10), 2);
 	
-	writeChar('0' + self->activePassingSemaphore[0], 1);
-	writeChar((self->lightState[0] == RED ? 'R' : 'G'), 2);
-	
-	writeChar((self->lightState[1] == RED ? 'R' : 'G'), 3);
-	writeChar('0' + self->activePassingSemaphore[1], 4);
-	
-	
-	SYNC(self->serial, &send, parsedValue);
+	SEND(MSEC(100), MSEC(150), self->serial, &send, parsedValue);
 }

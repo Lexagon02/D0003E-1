@@ -7,7 +7,8 @@
 
 unsigned int uber = MYUBER;
 
-void read(Serial* self);
+void pullFromSerial(Serial* self);
+void pushToSerial(Serial* self);
 
 void initSerial(Serial* self, Object* onReadObject, void (*onReadFunction)(unsigned char)){
 	
@@ -25,26 +26,39 @@ void initSerial(Serial* self, Object* onReadObject, void (*onReadFunction)(unsig
 	// Set frame format: 8data, 1stop bit
 	UCSR0C = (3 << UCSZ00) & ~(1 << USBS0);
 	
-	INSTALL(self, &read, IRQ_USART0_RX);
+	//INSTALL(self, &pullFromSerial, IRQ_USART0_RX);
+	SEND(MSEC(100), MSEC(110), self, &pushToSerial, NULL);
 		
 }
 
-void send(Serial* self, unsigned char input){
-	while(!(UCSR0A & (1 << UDRE0)));
-	UDR0 = input;
+void pushToSerial(Serial* self){
 	
-	//writeChar('0' + (input % 10), 5);
+	while(!(UCSR0A & (1 << UDRE0)));
+	UDR0 = self->output;
+		
+	//writeChar('0' + (self->output % 10), 5);
+	ASYNC(self, &pullFromSerial, NULL);
+
 }
 
-void read(Serial* self){
+void pullFromSerial(Serial* self){
+	
+	LCDDR0 ^= (1 << 1);
 	
 	while(!(UCSR0A & (1<<RXC0)));
 	
-	int temp = UDR0;
+	self->input = UDR0;
 	
-	//writeChar('0' + (temp % 10), 0);
+	//if(self->input) writeChar('0' + self->input, 5);
 	
-	ASYNC(self->onReadObject, self->onReadFunction, (unsigned char)temp);
+	SYNC(self->onReadObject, self->onReadFunction, self->input);	
+			
+}
+
+void send(Serial* self, unsigned char output){
+	
+	self->output = output;
+	SEND(MSEC(100), MSEC(110), self, &pushToSerial, NULL);
 	
 }
 
