@@ -9,10 +9,10 @@
 #include <termios.h>
 #include <io.h>
 
-#define PATH "/dev/ttyS0"
-#define DEBUG_PATH "/cygdrive/h/D0003E/D0003E/Labb5Computer/output.txt"
-//#define PATH "/cygdrive/h/Kod/D0003E/Labb5Computer/output"
-// #define PATH "/mnt/d/Mega/Kod/C/D0003E/Labb5Computer/output.txt"
+#define COM0 "/dev/ttyS0"
+#define COM1 "/dev/ttyS1"
+#define COM2 "/dev/ttyS2"
+#define DEBUG_PATH "/cygwin64/home/leorb/lab5/Computer/output.txt"
  
 #define SOUTH 1
 #define NORTH 0
@@ -36,7 +36,7 @@ void carOnBridge(int direction);
 void *timeCheck(void *vargp);
 void writeToDebug(int output);
 
-pthread_t runSim_id, readKeyboard_id, read_id, time_id,carsOnBridge_id[2][5];
+pthread_t runSim_id, readKeyboard_id, read_id, time_id, carsOnBridge_id[2][5];
 
 char inputChar = ' ';
 const char nwln = '\n';
@@ -56,15 +56,15 @@ int file;
 int debugFile;
 int output_g;
 int input_g;
-//Jag vet att det ‰r olagligt
+
 time_t start_t , end_t, duration_t;
 
 pthread_mutex_t lock;
 
 int main(){
 	
-	file = openFile();
-	debugFile = open(DEBUG_PATH, O_RDWR);
+	//file = openFile();
+	//debugFile = open(DEBUG_PATH, COM0,COM1,COM2);
 	
 	sleep(1);
 	
@@ -91,7 +91,6 @@ int main(){
 	pthread_join(runSim_id,NULL);
 	pthread_join(readKeyboard_id,NULL);
 	
-	//tcsetattr(STDIN_FILENO, TCSANOW, &tio_reset);
 	printf("Goodbye");
 	return 0;
 	
@@ -103,28 +102,29 @@ void *readKeyboard(void *vargp){
 	while(1){
 		
 		inputChar = getchar();
-		pthread_mutex_lock(&lock);
+		pthread_mutex_lock(&lock); // lock mutex
 		
-		if(inputChar == 'b'){
-			southIncomming++;
-			northIncomming++;
-		}
 		if(inputChar == 'n'){
 			northIncomming++;
 		}
 		if(inputChar == 's'){
 			southIncomming++;
 		}
-		
-		pthread_mutex_unlock(&lock);
+		if(inputChar == 'e'){
+			printf("Exit sim");
+			return;
+			// exit here
+		}
+		pthread_mutex_unlock(&lock); // unlock mutex
 	}
 }
 
 void *runSim(void *vargp){
 	//clock_t start_t, cur_t;
 	
-	time(&start_t);
-	//start_t = clock();
+	time(&start_t); //start_t = clock();
+	
+	// Settup
 	
 	int input = 0b0000;
 	int output;
@@ -142,12 +142,11 @@ void *runSim(void *vargp){
 	int localChanged;
 	
 	while(1){
-		pthread_mutex_lock(&lock);
+		pthread_mutex_lock(&lock); // lock mutex
 		input = input_g;
 		
 		pthread_mutex_lock(&lock);
 		
-		//printf("\nDuration: %d\n", duration_t);
 		parseData(&input, &output, &northQueue, &southQueue, &northIncomming, &southIncomming, &northLeft, &southLeft, &localChanged);
 
 		if(lastInput != input){
@@ -166,7 +165,7 @@ void *runSim(void *vargp){
 		localChanged += globalChanged;
 		globalChanged = 0;
 
-		if(localChanged){
+		if(localChanged == 1){
 			
 			printf("\x1b[2J");
 			printf("Input: ");
@@ -283,14 +282,14 @@ void parseData(int* input, int* output, int* northQueue, int* southQueue, int* n
 		addCarToQueue(output, southQueue, southIncomming, SOUTH);
 		*localChanged = 1;
 	}
-	
+	/*
 	if(carCrash(output)){
-		printf("Full fart framÂt o inga bromsar!!  ≈≈≈≈NEEEEJ BARN FAMILJEN\n");
+		printf("\n");
 		*localChanged = 1;
 	}
-	
+	*/
 }
-
+/*
 int carCrash(int* output){
 	
 	if(northBridge && southBridge){
@@ -300,17 +299,14 @@ int carCrash(int* output){
 	
 	
 }
-
+*/
 void addCarToQueue(int* output, int* queue, int* incomming ,int instance ){
-	if(instance == NORTH){
-				
+	if(instance == NORTH){		
 		*output |= (1 << 0);
 	}
-	else{
-			
+	else{	
 		*output |= (1 << 2); 
 	}
-	//ƒndrat
 	if((*incomming) > 0){
 		(*queue)++;
 	}
